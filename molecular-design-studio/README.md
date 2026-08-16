@@ -92,6 +92,44 @@ VITE_AGENT_API_TOKEN=dev-token npm run dev
 The Vite dev server proxies `/api` to `127.0.0.1:8000` so browser requests
 stay same-origin.
 
+## Cloudflare demo deployment
+
+The public demo uses Cloudflare Pages for the built React app and a Pages
+Function for `/api/*`. The Function injects the sidecar bearer token from an
+encrypted Cloudflare secret, so no API token or model credential is bundled
+into the browser JavaScript or committed to GitHub.
+
+The Python sidecar stays bound to `127.0.0.1:8000` and is exposed through an
+outbound-only Cloudflare Tunnel. Store its token in the macOS Keychain once:
+
+```bash
+security add-generic-password -U \
+  -a "$USER" \
+  -s com.genecode.cloudflare-backend \
+  -w "$(openssl rand -hex 32)"
+```
+
+Build the Pages version with a same-origin API base, then deploy from this
+directory. Configure both values as encrypted Pages secrets before the first
+deployment; replace the example origin with the current named or Quick Tunnel
+URL.
+
+```bash
+VITE_AGENT_API_BASE=/ npm run build
+security find-generic-password -a "$USER" \
+  -s com.genecode.cloudflare-backend -w \
+  | wrangler pages secret put GENECODE_ORIGIN_TOKEN \
+      --project-name genecode-agent
+printf '%s' 'https://example.trycloudflare.com' \
+  | wrangler pages secret put GENECODE_ORIGIN_URL \
+      --project-name genecode-agent
+wrangler pages deploy dist --project-name genecode-agent
+```
+
+`public/_routes.json` limits Function invocations to `/api/*`; all other files
+remain static Pages assets. The demo depends on the Mac connector remaining
+online. A named Tunnel is preferred for a stable production hostname.
+
 ## Available Scripts
 
 | Command | Description |
