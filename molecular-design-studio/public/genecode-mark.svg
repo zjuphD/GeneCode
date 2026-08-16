@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">GeneCode logo</title>
+  <desc id="desc">Two interlocking angular strands forming a DNA-inspired code mark.</desc>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="#171b22"/>
+  <rect x="25.5" y="25.5" width="461" height="461" rx="106.5" fill="none" stroke="#2d3542" stroke-width="3"/>
+  <path d="M154 108 358 190 154 322 358 404" fill="none" stroke="#f7f8fa" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M358 108 154 190 358 322 154 404" fill="none" stroke="#62a3df" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

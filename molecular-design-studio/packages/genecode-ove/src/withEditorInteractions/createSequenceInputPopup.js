@@ -1,0 +1,322 @@
+import { createRoot } from "react-dom/client";
+
+import { getRangeLength } from "@teselagen/range-utils";
+// import Tether from "tether";
+import Popper from "popper.js";
+
+import {
+  getInsertBetweenVals,
+  convertDnaCaretPositionOrRangeToAA,
+  filterSequenceString
+} from "@teselagen/sequence-utils";
+import React from "react";
+import { divideBy3 } from "../utils/proteinUtils";
+import "./createSequenceInputPopupStyle.css";
+import { Classes } from "@blueprintjs/core";
+import { getNodeToRefocus } from "../utils/editorUtils";
+import { noop } from "lodash-es";
+
+let popupRoot;
+
+class SequenceInputNoHotkeys extends React.Component {
+  popupNode = React.createRef();
+  unmountScheduled = false;
+  state = {
+    charsToInsert: "",
+    hasTempError: false
+  };
+  componentDidMount() {
+    document.addEventListener(
+      "mousedown",
+      this.handleUnmountIfClickOustidePopup
+    );
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener(
+      "mousedown",
+      this.handleUnmountIfClickOustidePopup
+    );
+  }
+  handleUnmountIfClickOustidePopup = e => {
+    const n = this.popupNode.current;
+    if (!n) return;
+    const node = n.parentNode;
+    if (!node) return;
+    if (node.contains(e.target)) {
+      return;
+    }
+    this.handleUnmount();
+  };
+  handleUnmount = () => {
+    if (this.unmountScheduled) return;
+    this.unmountScheduled = true;
+    setTimeout(() => {
+      const n = this.popupNode.current;
+      if (!n) return;
+      const node = n.parentNode;
+      if (!node) return;
+      const root = this.props.popupRoot;
+      root && root.unmount();
+      if (popupRoot === root) popupRoot = null;
+      this.props.nodeToReFocus && this.props.nodeToReFocus.focus();
+      document.getElementById("sequenceInputBubble")?.remove();
+    });
+  };
+  handleInsert() {
+    const { handleInsert = noop, isProtein } = this.props;
+    const { charsToInsert } = this.state;
+    if (!charsToInsert.length) {
+      return;
+    }
+    const seqToInsert = isProtein
+      ? {
+          proteinSequence: charsToInsert,
+          isProtein: true
+        }
+      : {
+          sequence: charsToInsert
+        };
+    handleInsert(seqToInsert);
+  }
+  render() {
+    const {
+      isReplace,
+      selectionLayer,
+      sequenceLength,
+      isProtein,
+      caretPosition,
+      sequenceData,
+      maxInsertSize,
+      getAcceptedInsertChars,
+      showAminoAcidUnitAsCodon
+    } = this.props;
+    const { charsToInsert, hasTempError } = this.state;
+
+    let message;
+    if (isReplace) {
+      const betweenVals = getInsertBetweenVals(
+        -1,
+        selectionLayer,
+        sequenceLength
+      );
+
+      message = (
+        <span>
+          Press <span style={{ fontWeight: "bolder" }}>ENTER</span> to replace{" "}
+          {divideBy3(getRangeLength(selectionLayer, sequenceLength), isProtein)}{" "}
+          {isProtein
+            ? showAminoAcidUnitAsCodon
+              ? "codons"
+              : "AAs"
+            : "base pairs"}{" "}
+          between{" "}
+          {isProtein
+            ? convertDnaCaretPositionOrRangeToAA(betweenVals[0])
+            : betweenVals[0]}{" "}
+          and{" "}
+          {isProtein
+            ? convertDnaCaretPositionOrRangeToAA(betweenVals[1] + 2)
+            : betweenVals[1]}
+        </span>
+      );
+    } else {
+      message = (
+        <span>
+          Press <span style={{ fontWeight: "bolder" }}>ENTER</span> to insert{" "}
+          {charsToInsert.length}{" "}
+          {isProtein
+            ? `${showAminoAcidUnitAsCodon ? "codons" : "AAs"}`
+            : "base pairs"}{" "}
+          after{" "}
+          {isProtein ? `${showAminoAcidUnitAsCodon ? "codon" : "AA"}` : "base"}{" "}
+          {isProtein
+            ? convertDnaCaretPositionOrRangeToAA(caretPosition)
+            : caretPosition}
+        </span>
+      );
+    }
+    return (
+      <div ref={this.popupNode} className="sequenceInputBubble">
+        <input
+          autoCorrect="off"
+          onKeyDown={e => {
+            if (e.keyCode === 27) {
+              this.handleUnmount();
+            }
+            if (e.keyCode === 13) {
+              this.handleInsert();
+              this.handleUnmount();
+            }
+          }}
+          className={Classes.INPUT}
+          value={charsToInsert}
+          autoFocus
+          style={hasTempError ? { borderColor: "red" } : {}}
+          onChange={e => {
+            const [sanitizedVal, warnings] = filterSequenceString(
+              e.target.value,
+              {
+                ...sequenceData,
+                name: undefined,
+                getAcceptedInsertChars
+              },
+            );
+            if (warnings.length) {
+              this.setState({
+                hasTempError: true
+              });
+              setTimeout(() => {
+                this.setState({
+                  hasTempError: false
+                });
+              }, 200);
+            }
+            if (maxInsertSize && sanitizedVal.length > maxInsertSize) {
+              return window.toastr.error(
+                `Sorry, your insert is greater than ${maxInsertSize}`
+              );
+            }
+            e.target.value = sanitizedVal;
+            this.setState({ charsToInsert: sanitizedVal });
+          }}
+        />
+        <div style={{ marginTop: 10 }}>{message}</div>
+        <div style={{ marginTop: 10 }}>
+          Press <span style={{ fontWeight: "bolder" }}>ESC</span> to{" "}
+          <button className="link-button" onClick={this.handleUnmount}>
+            cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
+export default function createSequenceInputPopup(props) {
+  const { useEventPositioning } = props;
+
+  let caretEl;
+  if (useEventPositioning) {
+    //we have to make a fake event here so that popper.js will position on the page correctly
+    const { e, nodeToReFocus } = useEventPositioning;
+    // e.persist();
+    const top = e.clientY;
+    const right = e.clientX;
+    const bottom = e.clientY;
+    const left = e.clientX;
+    caretEl = {
+      nodeToRefocus: nodeToReFocus,
+      getBoundingClientRect: () => ({
+        top,
+        right,
+        bottom,
+        left
+      }),
+      clientWidth: 0,
+      clientHeight: 0
+    };
+  }
+
+  if (!caretEl || !caretEl === 0 || !isElementInViewport(caretEl)) {
+    const activeEl = getActiveElement();
+    if (activeEl) {
+      caretEl = activeEl.querySelector(".veCaret");
+    }
+  }
+  if (!caretEl || !caretEl === 0 || !isElementInViewport(caretEl)) {
+    caretEl = getActiveElement();
+  }
+  if (!caretEl || !caretEl === 0 || !isElementInViewport(caretEl)) {
+    caretEl = document.querySelector(".veCaret");
+  }
+  if (document.body.classList.contains("sequenceDragging")) {
+    window.toastr.warning("Can't insert new sequence while dragging");
+    //don't allow this
+    return;
+  }
+
+  // function closeInput() {
+  //   sequenceInputBubble.remove();
+  // }
+  if (document.getElementById("sequenceInputBubble")) {
+    // remove the old one if it exists — defer the root unmount by a tick so
+    // it can never run synchronously during an in-flight render (React 18:
+    // "Attempted to synchronously unmount a root while React was already
+    // rendering"). Same deferred pattern as handleUnmount() below.
+    const oldRoot = popupRoot;
+    popupRoot = null;
+    document.getElementById("sequenceInputBubble").remove();
+    if (oldRoot) {
+      setTimeout(() => oldRoot.unmount(), 0);
+    }
+  }
+  const div = document.createElement("div");
+  div.style.zIndex = "400000";
+  div.id = "sequenceInputBubble";
+  document.body.appendChild(div);
+
+  popupRoot = createRoot(div);
+  const innerEl = (
+    <SequenceInputNoHotkeys
+      nodeToReFocus={caretEl.nodeToRefocus || getNodeToRefocus(caretEl)}
+      {...props}
+      popupRoot={popupRoot}
+    />
+  );
+
+  popupRoot.render(innerEl);
+
+  if (!caretEl) {
+    return console.error(
+      "there must be a caret element present in order to display the insertSequence popup"
+    );
+  }
+
+  new Popper(caretEl, div, {
+    placement: "bottom",
+    modifiers: {
+      offset: { offset: "94" }
+    }
+  });
+}
+
+const getActiveElement = function (document) {
+  document = document || window.document;
+
+  // Check if the active element is in the main web or iframe
+  if (
+    document.body === document.activeElement ||
+    /* eslint-disable eqeqeq*/
+
+    document.activeElement.tagName == "IFRAME"
+    /* eslint-enable eqeqeq*/
+  ) {
+    // Get iframes
+    const iframes = document.getElementsByTagName("iframe");
+    for (let i = 0; i < iframes.length; i++) {
+      // Recall
+      const focused = getActiveElement(iframes[i].contentWindow.document);
+      if (focused !== false) {
+        return focused; // The focused
+      }
+    }
+  } else return document.activeElement;
+
+  return false;
+};
+
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <=
+      (window.innerHeight ||
+        document.documentElement.clientHeight) /*or $(window).height() */ &&
+    rect.right <=
+      (window.innerWidth ||
+        document.documentElement.clientWidth) /*or $(window).width() */
+  );
+}

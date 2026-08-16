@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <!-- DNA双链 - 简化 -->
+  <line x1="6" y1="22" x2="38" y2="22" stroke="#22c55e" stroke-width="4"/>
+  <line x1="6" y1="28" x2="38" y2="28" stroke="#22c55e" stroke-width="4"/>
+
+  <!-- 剪刀图标 - CRISPR -->
+  <g transform="translate(18, 8)">
+    <circle cx="4" cy="4" r="3" fill="#22c55e"/>
+    <circle cx="12" cy="4" r="3" fill="#22c55e"/>
+    <rect x="3" y="5" width="10" height="3" rx="1.5" fill="#22c55e"/>
+  </g>
+
+  <!-- 剪切位点 - 红色高亮 -->
+  <rect x="20" y="18" width="4" height="16" rx="2" fill="#ef4444"/>
+
+  <!-- sgRNA - 简单弯曲 -->
+  <path d="M32 10 Q38 14, 36 22" stroke="#f59e0b" stroke-width="4" fill="none"/>
+</svg>

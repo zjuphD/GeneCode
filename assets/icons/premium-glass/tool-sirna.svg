@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <defs>
+    <linearGradient id="siTile" x1="7" y1="4" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="41.5" height="41.5" rx="14" fill="url(#siTile)" stroke="#B7DDF6" stroke-width="1.5"/>
+  <path d="M10 16C15 10.5 19 10.5 22 16C25 21.5 29 21.5 34 16" stroke="#0B8FD3" stroke-width="3" stroke-linecap="round"/>
+  <path d="M10 28C15 33.5 19 33.5 22 28C25 22.5 29 22.5 34 28" stroke="#12B981" stroke-width="3" stroke-linecap="round"/>
+  <path d="M13.5 18.5L13.5 25.5" stroke="#CFE4F5" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M18.5 17L18.5 27" stroke="#CFE4F5" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M25.5 17L25.5 27" stroke="#CFE4F5" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M30.5 18.5L30.5 25.5" stroke="#CFE4F5" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="22" cy="22" r="3.25" fill="#7C5CFF"/>
+</svg>

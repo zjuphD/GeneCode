@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GeneCode",
+  "version": "0.1.0",
+  "identifier": "studio.molecular-design",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build:agent-sidecar && npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "GeneCode",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 720,
+        "minHeight": 480,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:8000; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "app",
+    "createUpdaterArtifacts": true,
+    "resources": {
+      "../../server.py": "server.py",
+      "../../server_pkg": "server_pkg",
+      "binaries/agent-server": "agent-server"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDREMUUxQjEwNDRBRUZFQzIKUldUQy9xNUVFQnNlVGRUeUhmREoxaEQ5NWFCN1cyVDF5MnBEQTFVRGRHR1VRdXpZVU5iK2FCa20K",
+      "endpoints": [
+        "https://updates.invalid/genecode/latest.json"
+      ]
+    }
+  }
+}

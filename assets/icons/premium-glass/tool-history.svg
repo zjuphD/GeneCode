@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <defs>
+    <linearGradient id="histTile" x1="7" y1="4" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="41.5" height="41.5" rx="14" fill="url(#histTile)" stroke="#B7DDF6" stroke-width="1.5"/>
+  <circle cx="22" cy="22" r="11" stroke="#CFE4F5" stroke-width="2.4"/>
+  <path d="M22 15V22L27 25" stroke="#0B8FD3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.5 14.5C15.5 12.3 18.4 11 22 11" stroke="#12B981" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M13.5 14.5H18" stroke="#12B981" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M13.5 14.5V10" stroke="#12B981" stroke-width="2.8" stroke-linecap="round"/>
+</svg>

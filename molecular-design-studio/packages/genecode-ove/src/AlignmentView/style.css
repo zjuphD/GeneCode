@@ -1,0 +1,230 @@
+.alignment-search-bar .bp3-input {
+  border-radius: 5px !important;
+}
+
+.tg-pinch-helper {
+  width: 100%;
+}
+.ove-slider .bp3-slider {
+  min-width: 10px !important;
+  margin-bottom: 4px;
+}
+.alignmentViewTrackContainer:hover .alignmentViewSelectTrackPopover {
+  opacity: 0.9 !important;
+}
+.alignmentViewTrackContainer {
+  position: relative;
+}
+.alignmentViewTrackContainer.isTrackSelected {
+  background-color: #c0e2f5;
+}
+.bp3-dark .alignmentViewTrackContainer.isTrackSelected {
+  background-color: #2277a9;
+}
+.alignmentViewTrackContainer,
+.alignmentViewTrackContainer .veVectorInteractionWrapper,
+.alignmentViewTrackContainer .veVectorInteractionWrapper > div {
+  width: stretch;
+  width: fit-content;
+}
+
+.alignmentViewTrackContainer .veLinearView .veRowItemWrapper {
+  display: block;
+  overflow-x: hidden;
+}
+
+.alignmentHolder::-webkit-scrollbar {
+  display: none;
+}
+.alignmentHolder {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.alignmentTrackName {
+  background: white;
+}
+.alignmentTrackName {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.alignmentTrackName::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+.alignmentMinimapTracks {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.alignmentMinimapTracks::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+.bp3-dark .alignmentTrackName {
+  background: #30404d;
+}
+/* .alignmentViewTrackContainer:hover .alignmentTrackNameDiv {
+  opacity: 1 !important;
+} */
+.ve-alignment-top-bar {
+  align-items: center;
+}
+
+.ve-alignment-top-bar > * {
+  overflow-wrap: normal;
+  flex: 0 0 auto;
+  max-width: 100%;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.veAlignmentSelectionLayer {
+  top: 0;
+  height: 100% !important;
+  overflow: hidden;
+}
+.veAlignmentMismatch {
+  opacity: 0.9;
+}
+
+.veDiffNavigator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Menu item content layout */
+.veDiffMenuItem-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Navigation pill — groups prev/counter/next into one unit */
+.veDiffNav {
+  display: flex;
+  align-items: center;
+  border-radius: 3px;
+  background: rgba(92, 112, 128, 0.06);
+  border: 1px solid rgba(92, 112, 128, 0.18);
+}
+
+.veDiffNav-center {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 0 6px;
+  min-width: 64px;
+  justify-content: center;
+}
+
+.veDiffNav-fraction {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #5c7080;
+  line-height: 1;
+}
+
+.veDiffNav-sep {
+  margin: 0 1px;
+  opacity: 0.45;
+}
+
+/* Position number — monospace fits sequence coordinates */
+.veDiffNav-pos {
+  font-size: 10px;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+  color: #a7b6c2;
+  line-height: 1;
+}
+
+.veDiffNav-empty {
+  font-size: 11px;
+  font-style: italic;
+  color: #a7b6c2;
+  padding: 0 4px;
+}
+
+.bp3-dark .veDiffNav {
+  background: rgba(167, 182, 194, 0.05);
+  border-color: rgba(167, 182, 194, 0.14);
+}
+
+.bp3-dark .veDiffNav-fraction {
+  color: #5c7080;
+}
+
+.bp3-dark .veDiffNav-pos {
+  color: #4f6272;
+}
+
+.bp3-dark .veDiffNav-empty {
+  color: #5c7080;
+}
+.veRowItem:has(.rowViewTextContainer) .veAlignmentMismatch {
+  opacity: 0.5;
+}
+.alignmentView .veAlignmentSelectionLayer.veRowViewSelectionLayer {
+  background: gray;
+}
+.alignmentView:focus .veAlignmentSelectionLayer.veRowViewSelectionLayer {
+  background: #0099ff;
+}
+.alignmentView .veSelectionLayer {
+  top: 0;
+}
+/* tnw - commenting this out to improve scrolling of alignment view inside editor - https://github.com/TeselaGen/tg-oss/issues/128 */
+/* .tg-reflex-element-inner .alignmentView {
+  height: unset !important;
+} */
+.veTracksAndAlignmentHolder {
+  position: relative;
+  width: fit-content;
+  height: fit-content;
+}
+/* .isTrackDragging.veTracksAndAlignmentHolder {
+  transform: none !important;
+} */
+.veTracksAndAlignmentHolder {
+  transform: none !important;
+}
+.alignmentMinimapTracks {
+  background: #8a9ba8;
+}
+.minimapLane.lane-hovered .miniBluePath {
+  fill: rgb(169, 169, 245) !important;
+}
+.minimapLane.isTrackSelected .miniBluePath {
+  fill: rgb(137, 168, 255) !important;
+  stroke: rgb(0, 0, 0);
+  stroke-width: 0.5px;
+}
+
+.veAlignmentName {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-top: 2px;
+  margin-bottom: 5px;
+  margin-left: 3px;
+  font-weight: bold;
+  font-size: 14px;
+  max-width: 300px;
+  /* overflow: hidden; */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.veLabileSites {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: 10;
+}
+
+.veAlignmentViewLabileSiteLine {
+  position: absolute;
+  height: 100%;
+  width: 4px;
+  background: #1585c5;
+  opacity: 0.5;
+  top: 0;
+}

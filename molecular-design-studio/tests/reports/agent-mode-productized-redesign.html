@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Mode Productized Redesign</title>
+  <style>
+    :root {
+      --bg: #f4f1e8;
+      --panel: #fbfaf5;
+      --panel-2: #f0efe6;
+      --line: #d9d5c9;
+      --text: #243126;
+      --muted: #6d746c;
+      --green: #2f6f4f;
+      --green-2: #e4efe6;
+      --blue: #2e6b9a;
+      --amber: #b46d23;
+      --purple: #695a9f;
+      --shadow: 0 12px 28px rgba(39, 48, 39, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      width: 1600px;
+      height: 1000px;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .frame {
+      width: 1600px;
+      height: 1000px;
+      display: grid;
+      grid-template-columns: 240px 1fr 430px;
+      grid-template-rows: 34px 1fr;
+      border: 1px solid var(--line);
+      background: #f8f6ef;
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #ece8de;
+      font-size: 13px;
+      letter-spacing: .01em;
+    }
+
+    .brand {
+      color: var(--green);
+      font-weight: 760;
+    }
+
+    .project-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 5px;
+      background: #e7e3d8;
+      color: #536052;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .sidebar {
+      grid-row: 2;
+      border-right: 1px solid var(--line);
+      background: #eeece3;
+      padding: 18px 14px;
+    }
+
+    .nav-title {
+      margin: 0 0 18px;
+      color: #777b70;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .15em;
+    }
+
+    .nav-item {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 5px;
+      color: #334136;
+      font-size: 14px;
+      font-weight: 520;
+    }
+
+    .nav-item.active {
+      background: #dfece1;
+      color: var(--green);
+      font-weight: 750;
+    }
+
+    .workspace {
+      grid-row: 2;
+      display: grid;
+      grid-template-rows: 42px 1fr 30px;
+      min-width: 0;
+      background: #fbfaf5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f2f0e8;
+    }
+
+    .toolbar button {
+      height: 26px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      border-radius: 4px;
+      color: #414c42;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tool-icon {
+      width: 32px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+      background: #e8eff3;
+      border-radius: 4px;
+      font-weight: 800;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-columns: 54% 46%;
+      min-height: 0;
+    }
+
+    .seq-panel, .map-panel {
+      min-width: 0;
+      padding: 18px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .seq-panel {
+      border-right: 1px solid var(--line);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 28px;
+      height: 28px;
+      align-items: center;
+      color: #1f516e;
+      font-size: 16px;
+    }
+
+    .tab.active {
+      color: #245f7c;
+      border-bottom: 2px solid #245f7c;
+      padding-bottom: 5px;
+    }
+
+    .jump {
+      margin-top: 18px;
+      color: #2c6b8f;
+      font-style: italic;
+      font-size: 16px;
+    }
+
+    .sequence {
+      margin-top: 18px;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.56;
+      letter-spacing: .15em;
+      color: #222;
+      white-space: pre;
+    }
+
+    .feature-row {
+      height: 18px;
+      margin: 4px 0;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #2247cc, #2877d7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: .02em;
+    }
+
+    .enzyme {
+      color: #bd7265;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .map-wrap {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 90px;
+    }
+
+    .plasmid {
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      position: relative;
+      background:
+        radial-gradient(circle at center, #fbfaf5 0 36%, transparent 37%),
+        conic-gradient(#1b52cf 0 74deg, #2f86dc 74deg 122deg, #1b52cf 122deg 220deg, #2f86dc 220deg 275deg, #1b52cf 275deg 360deg);
+      border: 2px solid #d2cfc5;
+      box-shadow: inset 0 0 0 22px #fbfaf5, inset 0 0 0 43px #d7e1dd, var(--shadow);
+    }
+
+    .plasmid::after {
+      content: "pUC19 demo\A2686 bps";
+      white-space: pre;
+      position: absolute;
+      inset: 118px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 13px;
+      color: #28342c;
+      line-height: 1.35;
+    }
+
+    .statusbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      background: #edf2f3;
+      color: #36423a;
+      font-size: 15px;
+    }
+
+    .agent {
+      grid-row: 2;
+      border-left: 1px solid var(--line);
+      background: #f7f5ed;
+      display: grid;
+      grid-template-rows: 58px 1fr 82px;
+      min-width: 0;
+    }
+
+    .agent-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #efebe1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .agent-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .agent-title strong {
+      font-size: 15px;
+      color: #243126;
+    }
+
+    .agent-title span {
+      color: #73786e;
+      font-size: 11px;
+      letter-spacing: .12em;
+      font-weight: 800;
+    }
+
+    .agent-mode {
+      display: inline-flex;
+      border: 1px solid #cfd7ca;
+      background: #fffdf8;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .agent-mode b {
+      height: 26px;
+      padding: 0 9px;
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+      color: #687267;
+      font-size: 12px;
+    }
+
+    .agent-mode b.active {
+      background: var(--green);
+      color: white;
+    }
+
+    .agent-body {
+      min-height: 0;
+      overflow: hidden;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-card {
+      background: #fffdf8;
+      border: 1px solid #d7d3c7;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 13px;
+    }
+
+    .task-label {
+      color: #738071;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .12em;
+      margin-bottom: 8px;
+    }
+
+    .task-input {
+      min-height: 74px;
+      border: 1px solid #d7d3c7;
+      border-radius: 8px;
+      background: #fbfaf5;
+      color: #1f2f25;
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .context-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .context-chip {
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--green-2);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .action-row {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .primary, .secondary {
+      height: 34px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .secondary {
+      background: #eef3ed;
+      color: var(--green);
+      border-color: #cfdbcf;
+    }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .section {
+      background: #fffdf8;
+      border: 1px solid #d8d4c9;
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    .section-title {
+      height: 30px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f0eee6;
+      border-bottom: 1px solid #ded9cc;
+      color: #5d665d;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .1em;
+    }
+
+    .section-title span {
+      letter-spacing: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .plan-list, .tool-list, .result-list {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .plan-step {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      align-items: start;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--green);
+    }
+
+    .dot.wait { background: #a59f92; }
+    .dot.run { background: var(--blue); }
+
+    .step-title {
+      color: #223026;
+      font-weight: 750;
+    }
+
+    .step-meta {
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      height: 20px;
+      padding: 0 7px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: #edf4f0;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .tool-call {
+      display: grid;
+      grid-template-columns: 25px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      font-size: 12px;
+    }
+
+    .tool-icon-small {
+      width: 25px;
+      height: 25px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: #e8eff3;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .approval {
+      border: 1px solid #e2c697;
+      background: #fff7e6;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      font-size: 12px;
+      color: #3e3423;
+    }
+
+    .approval strong { color: #7a4d12; }
+
+    .approval-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .approval-actions button {
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid #dec08b;
+      background: #fffaf0;
+      color: #724b17;
+      font-weight: 760;
+    }
+
+    .result-card {
+      border: 1px solid #d7d3c7;
+      border-radius: 8px;
+      padding: 9px;
+      background: #fbfaf5;
+      display: grid;
+      gap: 6px;
+    }
+
+    .result-card strong {
+      color: #1f3429;
+      font-size: 13px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .metric {
+      background: #eef3ed;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 11px;
+      color: #5f6b61;
+    }
+
+    .metric b {
+      display: block;
+      color: #243126;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      background: #efebe1;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr 76px;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .composer-input {
+      height: 40px;
+      border: 1px solid #d5d0c4;
+      background: #fffdf8;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: #6d746c;
+      font-size: 13px;
+    }
+
+    .composer button {
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      background: var(--green);
+      color: white;
+      font-weight: 800;
+    }
+
+    .callout {
+      position: absolute;
+      left: 790px;
+      top: 92px;
+      width: 330px;
+      padding: 11px 13px;
+      border-radius: 12px;
+      background: rgba(47, 111, 79, .92);
+      color: white;
+      font-size: 13px;
+      line-height: 1.45;
+      box-shadow: var(--shadow);
+    }
+
+    .callout b {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <div class="brand">Molecular Design Studio</div>
+      <div class="project-status">当前项目 <span class="pill">pUC19 demo</span><span class="pill">2,686 bp</span><span class="pill">circular</span></div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="nav-title">PROJECT</p>
+      <div class="nav-item active">Sequences</div>
+      <div class="nav-item">Primers</div>
+      <div class="nav-item">Cloning</div>
+      <div class="nav-item">Restriction Map</div>
+      <div class="nav-item">Annotations</div>
+    </aside>
+
+    <main class="workspace">
+      <div class="toolbar">
+        <button>Open</button>
+        <button>Save File</button>
+        <button>Save File As</button>
+        <div class="tool-icon">↺</div>
+        <div class="tool-icon">↻</div>
+        <div class="tool-icon">▣</div>
+        <div class="tool-icon">🔍</div>
+        <div class="tool-icon">👁</div>
+      </div>
+
+      <section class="editor">
+        <div class="seq-panel">
+          <div class="tabs"><span class="tab active">Sequence Map</span></div>
+          <div class="jump">↓ Jump to end</div>
+          <div class="enzyme">SapI</div>
+          <div class="sequence">CGCCAATA CGCAAACGCC TCTCCCCGC CGTTGGC
+CGCGGTTAT GCGTTTGCGG AGAGGGGCG GCAACCG</div>
+          <div class="feature-row">Cloning vector pUC19</div>
+          <div class="feature-row">M13mp19</div>
+          <div class="feature-row">Lac-operon</div>
+          <div class="sequence">CGATTCATT AATGCAGCT GGCACGACA GGTTTCCGAC
+GCTAAGTAA TTACGTCGA CCGTGCTGT CCAAAGGCTG</div>
+          <div class="feature-row">Cloning vector pUC19</div>
+          <div class="feature-row">M13mp19</div>
+          <div class="feature-row">Lac-operon</div>
+          <div class="sequence">TTGGAAAGC GGCAGTGAC GCAACGCAA TTAATGTGAG
+AACCTTTCG CCGTCACTG CGTTGCGTT AATTACACTC</div>
+          <div class="feature-row">Cloning vector pUC19</div>
+          <div class="feature-row">M13mp19</div>
+          <div class="feature-row">Lac-operon</div>
+          <div class="enzyme" style="margin-top:24px">EcoRI &nbsp; HindIII &nbsp; BamHI &nbsp; XbaI</div>
+          <div class="sequence">CGCCAGGG TTTTCCCAG TCACGACG TTGTAAAAC
+GCGGTCCC AAAAGGGTC AGTGCTGC AACATTTTG</div>
+          <div class="feature-row">polylinker of M13mp19</div>
+        </div>
+
+        <div class="map-panel">
+          <div class="tabs"><span class="tab active">Circular Map</span><span class="tab">Linear Map</span></div>
+          <div class="map-wrap"><div class="plasmid"></div></div>
+        </div>
+      </section>
+
+      <div class="statusbar">
+        <div>Circular</div>
+        <div>No Selection &nbsp; <span style="color:#3480a9">Select Inverse</span></div>
+        <div>Length: 2686 bps</div>
+      </div>
+    </main>
+
+    <aside class="agent">
+      <div class="agent-head">
+        <div class="agent-title">
+          <strong>Design Agent</strong>
+          <span>LOCAL MOLECULAR CO-PILOT</span>
+        </div>
+        <div class="agent-mode"><b>Ask</b><b class="active">Plan</b><b>Act</b></div>
+      </div>
+
+      <div class="agent-body">
+        <section class="task-card">
+          <div class="task-label">CURRENT TASK</div>
+          <div class="task-input">我要把目标片段克隆进 pUC19，自动检查酶切位点、设计 Gibson 引物，并给出可执行实验步骤。</div>
+          <div class="context-row">
+            <span class="context-chip">已附加当前质粒</span>
+            <span class="context-chip">2,686 bp</span>
+            <span class="context-chip">8 features</span>
+          </div>
+          <div class="action-row">
+            <button class="primary">生成计划</button>
+            <button class="secondary">补充信息</button>
+          </div>
+        </section>
+
+        <div class="agent-grid">
+          <section class="section">
+            <div class="section-title">AGENT PLAN <span>等待确认</span></div>
+            <div class="plan-list">
+              <div class="plan-step">
+                <div class="dot">1</div>
+                <div><div class="step-title">读取当前载体和目标片段</div><div class="step-meta">确认拓扑、长度、已有注释和冲突区域</div></div>
+                <span class="badge">done</span>
+              </div>
+              <div class="plan-step">
+                <div class="dot run">2</div>
+                <div><div class="step-title">调用设计工具组合</div><div class="step-meta">Primer3 / 限制酶库 / Tm 与二聚体检查</div></div>
+                <span class="badge">next</span>
+              </div>
+              <div class="plan-step">
+                <div class="dot wait">3</div>
+                <div><div class="step-title">生成方案并预览修改</div><div class="step-meta">只给建议，不直接改序列</div></div>
+                <span class="badge">safe</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">TOOL ACTIVITY <span>透明可追踪</span></div>
+            <div class="tool-list">
+              <div class="tool-call">
+                <div class="tool-icon-small">D</div>
+                <div><b>读取序列上下文</b><br><span class="step-meta">pUC19 demo / circular / selected region</span></div>
+                <span class="badge">ok</span>
+              </div>
+              <div class="tool-call">
+                <div class="tool-icon-small">P</div>
+                <div><b>准备 Primer3 参数</b><br><span class="step-meta">Tm 60-65°C，GC 40-60%</span></div>
+                <span class="badge">ready</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="approval">
+            <strong>需要你确认</strong>
+            是否按 Gibson Assembly 继续？确认后 Agent 才会运行工具并生成候选引物。
+            <div class="approval-actions">
+              <button>确认运行</button>
+              <button>修改条件</button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section-title">RESULT ARTIFACTS <span>可复制 / 可应用</span></div>
+            <div class="result-list">
+              <div class="result-card">
+                <strong>候选方案 A：Gibson 引物对</strong>
+                <div class="metric-row">
+                  <div class="metric">Forward Tm<b>62.4°C</b></div>
+                  <div class="metric">Reverse Tm<b>61.8°C</b></div>
+                  <div class="metric">风险<b>低</b></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="composer-input">继续追问，或让 Agent 修改计划...</div>
+        <button>Send</button>
+      </div>
+    </aside>
+
+    <div class="callout">
+      <b>改造重点</b>
+      Agent 不再是“功能按钮集合”，而是围绕一个任务持续推进：理解上下文 → 制定计划 → 调工具 → 等用户确认 → 输出可复制结果。
+    </div>
+  </div>
+</body>
+</html>

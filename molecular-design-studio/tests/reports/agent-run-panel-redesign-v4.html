@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Run Panel Redesign V4</title>
+  <style>
+    :root {
+      --bg: #f4f1e8;
+      --surface: #fbfaf5;
+      --soft: #efebe1;
+      --line: #d9d4c7;
+      --text: #243126;
+      --muted: #687367;
+      --green: #2f6f4f;
+      --green-soft: #e4efe6;
+      --blue: #2f6b94;
+      --blue-soft: #e8eff3;
+      --amber: #9f681f;
+      --amber-soft: #fff6e2;
+      --red: #9e4b3f;
+      --red-soft: #fff0e9;
+      --shadow: 0 10px 24px rgba(36, 45, 36, .09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      width: 1600px;
+      height: 1000px;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .app {
+      width: 1600px;
+      height: 1000px;
+      display: grid;
+      grid-template-columns: 238px minmax(0, 1fr) 420px;
+      grid-template-rows: 36px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #ebe7dc;
+      font-size: 13px;
+    }
+
+    .brand {
+      color: var(--green);
+      font-weight: 780;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #70776d;
+      font-weight: 600;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 5px;
+      background: #e1ded3;
+      color: #536054;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .nav {
+      grid-row: 2;
+      padding: 18px 14px;
+      background: #eeebe2;
+      border-right: 1px solid var(--line);
+    }
+
+    .nav h2 {
+      margin: 0 0 18px;
+      color: #777b70;
+      font-size: 12px;
+      letter-spacing: .15em;
+    }
+
+    .nav div {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 5px;
+      color: #334136;
+      font-size: 14px;
+      font-weight: 540;
+    }
+
+    .nav .active {
+      background: #dfece1;
+      color: var(--green);
+      font-weight: 780;
+    }
+
+    .main {
+      grid-row: 2;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr) 30px;
+      min-width: 0;
+      background: #fbfaf5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f1eee6;
+    }
+
+    .toolbar button {
+      height: 26px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      border-radius: 4px;
+      color: #414c42;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tool {
+      width: 32px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 4px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-weight: 800;
+    }
+
+    .editor {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 55% 45%;
+    }
+
+    .sequence, .map {
+      min-width: 0;
+      overflow: hidden;
+      padding: 20px 30px;
+    }
+
+    .sequence {
+      border-right: 1px solid var(--line);
+    }
+
+    .tabs {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      color: #1f516e;
+      font-size: 16px;
+    }
+
+    .tabs span:first-child {
+      padding-bottom: 5px;
+      border-bottom: 2px solid #245f7c;
+    }
+
+    .jump {
+      margin: 18px 0 6px;
+      color: #2c6b8f;
+      font-size: 16px;
+      font-style: italic;
+    }
+
+    .enzyme {
+      color: #b16c61;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .dna {
+      margin: 12px 0 4px;
+      color: #20241f;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+      letter-spacing: .15em;
+      white-space: pre;
+    }
+
+    .feature {
+      height: 18px;
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #2148cc, #2877d7);
+      color: white;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .map-center {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 70px;
+    }
+
+    .plasmid {
+      width: 330px;
+      height: 330px;
+      border-radius: 50%;
+      position: relative;
+      background:
+        radial-gradient(circle at center, #fbfaf5 0 36%, transparent 37%),
+        conic-gradient(#1b52cf 0 80deg, #2f86dc 80deg 128deg, #1b52cf 128deg 224deg, #2f86dc 224deg 278deg, #1b52cf 278deg 360deg);
+      border: 2px solid #d2cfc5;
+      box-shadow: inset 0 0 0 24px #fbfaf5, inset 0 0 0 44px #dbe5e0, var(--shadow);
+    }
+
+    .plasmid::after {
+      content: "pUC19 demo\A2686 bps";
+      white-space: pre;
+      position: absolute;
+      inset: 118px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #28342c;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      background: #edf2f3;
+      color: #36423a;
+      font-size: 15px;
+    }
+
+    .agent {
+      grid-row: 2;
+      border-left: 1px solid var(--line);
+      background: #f4f1e8;
+      display: grid;
+      grid-template-rows: 58px minmax(0, 1fr);
+      min-width: 0;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #eee9dd;
+    }
+
+    .agent-title strong {
+      display: block;
+      font-size: 15px;
+      color: #203025;
+    }
+
+    .agent-title span {
+      color: #70776d;
+      font-size: 11px;
+      font-weight: 820;
+      letter-spacing: .12em;
+    }
+
+    .run-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--red-soft);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .run-state::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--red);
+    }
+
+    .agent-body {
+      min-height: 0;
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card {
+      background: #fffdf8;
+      border: 1px solid #d8d4c9;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .card-inner {
+      padding: 8px 12px;
+    }
+
+    .section-title {
+      height: 29px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd8cc;
+      background: #f0ede4;
+      color: #5f695f;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .12em;
+    }
+
+    .section-title span {
+      color: var(--green);
+      letter-spacing: 0;
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      color: #768076;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .13em;
+    }
+
+    .objective {
+      font-size: 19px;
+      line-height: 1.22;
+      color: #1f3327;
+      font-weight: 820;
+    }
+
+    .facts {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .fact {
+      min-height: 30px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #f5f3eb;
+      border: 1px solid #e0dbcf;
+    }
+
+    .fact span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 760;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .fact b {
+      display: block;
+      margin-top: 2px;
+      color: #26352a;
+      font-size: 12px;
+    }
+
+    .inputs {
+      padding: 7px 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .input-row {
+      min-height: 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 7px;
+      border-radius: 8px;
+      background: #f5f3eb;
+      border: 1px solid #e0dbcf;
+    }
+
+    .input-row b {
+      display: block;
+      color: #26352a;
+      font-size: 12px;
+      margin-bottom: 1px;
+    }
+
+    .input-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      height: 21px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 820;
+    }
+
+    .missing {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .auto {
+      background: #edf4f0;
+      color: var(--green);
+    }
+
+    .detected {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .run {
+      padding: 7px 12px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .run-row {
+      min-height: 21px;
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mark {
+      width: 19px;
+      height: 19px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 880;
+      background: #a4aca2;
+    }
+
+    .done .mark {
+      background: var(--green);
+    }
+
+    .blocked .mark {
+      background: var(--red);
+    }
+
+    .pending .mark {
+      background: #cbc5b9;
+      color: #6e716a;
+    }
+
+    .run-row b {
+      color: #253429;
+      font-size: 12px;
+    }
+
+    .run-row small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .queue {
+      padding: 6px 12px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .queue-row {
+      min-height: 24px;
+      display: grid;
+      grid-template-columns: 27px 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .queue-icon {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .queue-row b {
+      display: block;
+      color: #26352a;
+      font-size: 12px;
+    }
+
+    .queue-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .next {
+      padding: 9px 12px;
+      background: linear-gradient(180deg, #fffaf0, #fff7e8);
+      border: 1px solid #dec694;
+      border-radius: 10px;
+    }
+
+    .next h3 {
+      margin: 0 0 4px;
+      color: #704915;
+      font-size: 14px;
+    }
+
+    .next p {
+      margin: 0 0 7px;
+      color: #514331;
+      font-size: 12px;
+      line-height: 1.32;
+    }
+
+    .primary {
+      width: 100%;
+      height: 35px;
+      border: none;
+      border-radius: 9px;
+      background: var(--green);
+      color: white;
+      font-size: 14px;
+      font-weight: 820;
+    }
+
+    .secondary-row {
+      margin-top: 7px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 7px;
+    }
+
+    .secondary {
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid #d6bf8c;
+      background: #fffaf0;
+      color: #704915;
+      font-size: 12px;
+      font-weight: 760;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">Molecular Design Studio</div>
+      <div class="top-meta">
+        当前项目
+        <span class="chip">pUC19 demo</span>
+        <span class="chip">2,686 bp</span>
+        <span class="chip">circular</span>
+      </div>
+    </header>
+
+    <aside class="nav">
+      <h2>PROJECT</h2>
+      <div class="active">Sequences</div>
+      <div>Primers</div>
+      <div>Cloning</div>
+      <div>Restriction Map</div>
+      <div>Annotations</div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button>Open</button>
+        <button>Save File</button>
+        <button>Save File As</button>
+        <div class="tool">↺</div>
+        <div class="tool">↻</div>
+        <div class="tool">▣</div>
+        <div class="tool">⌕</div>
+        <div class="tool">◉</div>
+      </div>
+
+      <section class="editor">
+        <div class="sequence">
+          <div class="tabs"><span>Sequence Map</span></div>
+          <div class="jump">↓ Jump to end</div>
+          <div class="enzyme">SapI</div>
+          <div class="dna">CGCCAATA CGCAAACGCC TCTCCCCGC CGTTGGC
+CGCGGTTAT GCGTTTGCGG AGAGGGGCG GCAACCG</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="dna">CGATTCATT AATGCAGCT GGCACGACA GGTTTCCGAC
+GCTAAGTAA TTACGTCGA CCGTGCTGT CCAAAGGCTG</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="dna">TTGGAAAGC GGCAGTGAC GCAACGCAA TTAATGTGAG
+AACCTTTCG CCGTCACTG CGTTGCGTT AATTACACTC</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="enzyme" style="margin-top:24px">EcoRI &nbsp; HindIII &nbsp; BamHI &nbsp; XbaI</div>
+          <div class="dna">CGCCAGGG TTTTCCCAG TCACGACG TTGTAAAAC
+GCGGTCCC AAAAGGGTC AGTGCTGC AACATTTTG</div>
+          <div class="feature">polylinker of M13mp19</div>
+        </div>
+
+        <div class="map">
+          <div class="tabs"><span>Circular Map</span><span>Linear Map</span></div>
+          <div class="map-center"><div class="plasmid"></div></div>
+        </div>
+      </section>
+
+      <div class="status">
+        <div>Circular</div>
+        <div>No Selection &nbsp; <span style="color:#3480a9">Select Inverse</span></div>
+        <div>Length: 2686 bps</div>
+      </div>
+    </main>
+
+    <aside class="agent">
+      <div class="agent-header">
+        <div class="agent-title">
+          <strong>Design Agent</strong>
+          <span>AGENT RUN</span>
+        </div>
+        <div class="run-state">Blocked</div>
+      </div>
+
+      <div class="agent-body">
+        <section class="card">
+          <div class="card-inner">
+            <div class="eyebrow">OBJECTIVE</div>
+            <div class="objective">Clone insert into pUC19</div>
+            <div class="facts">
+              <div class="fact"><span>Method</span><b>Gibson Assembly</b></div>
+              <div class="fact"><span>Status</span><b>Insert missing</b></div>
+              <div class="fact"><span>Vector</span><b>pUC19 · 2,686 bp</b></div>
+              <div class="fact"><span>Context</span><b>8 features · MCS found</b></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">REQUIRED INPUTS <span>1 missing</span></div>
+          <div class="inputs">
+            <div class="input-row">
+              <div><b>Insert sequence</b><span>Required before design can run</span></div>
+              <div class="badge missing">Missing</div>
+            </div>
+            <div class="input-row">
+              <div><b>Cloning method</b><span>Use Gibson unless changed</span></div>
+              <div class="badge auto">Auto</div>
+            </div>
+            <div class="input-row">
+              <div><b>Target region</b><span>MCS detected from vector</span></div>
+              <div class="badge detected">Detected</div>
+            </div>
+            <div class="input-row">
+              <div><b>Primer settings</b><span>Tm, GC, homology defaults</span></div>
+              <div class="badge auto">Default</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">AGENT RUN <span>progress</span></div>
+          <div class="run">
+            <div class="run-row done"><div class="mark">✓</div><b>parse_vector</b><small>completed</small></div>
+            <div class="run-row done"><div class="mark">✓</div><b>detect_features</b><small>8 found</small></div>
+            <div class="run-row done"><div class="mark">✓</div><b>locate_mcs</b><small>ready</small></div>
+            <div class="run-row blocked"><div class="mark">!</div><b>insert_sequence</b><small>required</small></div>
+            <div class="run-row pending"><div class="mark">○</div><b>primer_design</b><small>waiting</small></div>
+            <div class="run-row pending"><div class="mark">○</div><b>validation</b><small>waiting</small></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">TOOL QUEUE <span>after input</span></div>
+          <div class="queue">
+            <div class="queue-row">
+              <div class="queue-icon">3</div>
+              <div><b>Primer3 design</b><span>Tm / GC / homology arm optimization</span></div>
+              <div class="badge missing">waiting</div>
+            </div>
+            <div class="queue-row">
+              <div class="queue-icon">R</div>
+              <div><b>Restriction scan</b><span>enzyme conflict and MCS check</span></div>
+              <div class="badge missing">waiting</div>
+            </div>
+            <div class="queue-row">
+              <div class="queue-icon">P</div>
+              <div><b>Protocol generation</b><span>wet-lab steps and export table</span></div>
+              <div class="badge missing">waiting</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="next">
+          <h3>Next action</h3>
+          <p>Add the insert sequence. The Agent will continue automatically from primer design to validation and protocol output.</p>
+          <button class="primary">Add insert sequence</button>
+          <div class="secondary-row">
+            <button class="secondary">Paste</button>
+            <button class="secondary">Upload</button>
+            <button class="secondary">Project</button>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>

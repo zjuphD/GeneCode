@@ -1,0 +1,29 @@
+.veRowViewSelectionLayer {
+  height: 100%;
+  border: none;
+  background: #0099ff;
+  opacity: 0.3;
+  top: -2px;
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+}
+
+.veMismatchLayer {
+  z-index: 11; /* Ensure mismatch layers appear on top of normal selection layer */
+}
+
+.veCaret {
+  background: black;
+  stroke: black;
+  opacity: 1;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.veCaret.veSelectionLayer.cutsiteLabelSelectionLayer {
+  display: none !important;
+}

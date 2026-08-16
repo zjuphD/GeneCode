@@ -1,0 +1,11 @@
+# Development / test dependencies for the Python sidecar (A-DOC-002).
+#
+# The test suite is hermetic and runs on the standard library alone —
+# no pytest, no extra packages. Run it from the repository root:
+#
+#   AGENT_LLM_ENABLED=0 python3 -m unittest discover -s tests -p "test_*.py"
+#
+# (AGENT_LLM_ENABLED=0 keeps the suite deterministic by skipping live LLM
+# calls; the same command is what CI runs in .github/workflows/ci.yml.)
+#
+# Runtime dependencies live in requirements-agent.txt.

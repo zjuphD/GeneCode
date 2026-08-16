@@ -1,0 +1,115 @@
+.genecode-react18-select {
+  position: relative;
+  width: 100%;
+  min-width: 180px;
+  font-size: 12px;
+}
+
+.genecode-react18-select__control {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 2px 4px;
+  border: 1px solid #a7b6c2;
+  border-radius: 3px;
+  background: #fff;
+  cursor: text;
+}
+
+.genecode-react18-select__control:focus-within {
+  border-color: #137cbd;
+  box-shadow: 0 0 0 1px #137cbd;
+}
+
+.genecode-react18-select__control.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.genecode-react18-select__values {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.genecode-react18-select__values input {
+  flex: 1 1 80px;
+  min-width: 56px;
+  border: 0;
+  outline: 0;
+  padding: 3px;
+  background: transparent;
+}
+
+.genecode-react18-select__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: #fff;
+  background: #137cbd;
+}
+
+.genecode-react18-select__tag > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.genecode-react18-select__tag button,
+.genecode-react18-select__toggle {
+  border: 0;
+  padding: 0 2px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.genecode-react18-select__toggle {
+  color: #5c7080;
+  font-size: 14px;
+}
+
+.genecode-react18-select__menu {
+  position: absolute;
+  z-index: 4000;
+  top: calc(100% + 3px);
+  left: 0;
+  width: max(100%, 260px);
+  max-width: min(440px, 90vw);
+  max-height: 280px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid rgba(16, 22, 26, 0.15);
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(16, 22, 26, 0.2);
+}
+
+.genecode-react18-select__option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 2px;
+  padding: 6px 8px;
+  text-align: left;
+  color: #182026;
+  background: transparent;
+  cursor: pointer;
+}
+
+.genecode-react18-select__option:hover,
+.genecode-react18-select__option:focus-visible {
+  outline: 0;
+  background: #ebf1f5;
+}
+
+.genecode-react18-select__empty {
+  padding: 8px;
+  color: #5c7080;
+}

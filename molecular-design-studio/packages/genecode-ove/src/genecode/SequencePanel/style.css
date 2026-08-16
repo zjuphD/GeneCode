@@ -1,0 +1,170 @@
+.genecode-sequence-panel {
+  color: #20252b;
+  background: #fff;
+}
+
+.genecode-sequence-scroll {
+  scrollbar-color: #aeb7c1 #f4f6f8;
+  scrollbar-width: thin;
+}
+
+.genecode-sequence-row {
+  display: block;
+  border-bottom: 1px solid #eef1f3;
+  shape-rendering: geometricPrecision;
+  user-select: none;
+  touch-action: none;
+}
+
+.genecode-sequence-hit-region {
+  cursor: pointer;
+}
+
+.genecode-sequence-selection-hit-region {
+  cursor: context-menu;
+}
+
+.genecode-sequence-base {
+  fill: #1f2b35;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.genecode-sequence-base-forward {
+  fill: #17242e;
+  font-weight: 650;
+}
+
+.genecode-sequence-base-reverse {
+  fill: #24323d;
+  font-weight: 600;
+}
+
+.genecode-sequence-forward-band {
+  fill: #ffffff;
+}
+
+.genecode-sequence-reverse-band {
+  fill: #eef3f6;
+}
+
+.genecode-sequence-strand-divider {
+  stroke: #bdc8d1;
+  stroke-width: 1;
+}
+
+.genecode-sequence-ruler-label,
+.genecode-sequence-prime-label,
+.genecode-sequence-amino-acid-index {
+  fill: #566571;
+  font-size: 9px;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.genecode-sequence-prime-label {
+  fill: #17242e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.genecode-sequence-ruler-label {
+  fill: #6d7983;
+  font-size: 8px;
+}
+
+.genecode-sequence-ruler > line:first-child {
+  stroke: #4d5b66;
+  stroke-width: 1.25;
+}
+
+.genecode-sequence-ruler > line:not(:first-child) {
+  stroke: #667581;
+}
+
+.genecode-sequence-feature-label,
+.genecode-sequence-primer-label {
+  fill: #14202a;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.genecode-sequence-label-text {
+  fill: #2b3642;
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+.genecode-sequence-label-text.genecode-sequence-label-cutsites {
+  fill: #3d4a57;
+  font-weight: 600;
+}
+
+/* SnapGene-style emphasis: an enzyme that cuts exactly once is the most
+   actionable label in a sequence view, so keep its name visibly heavier. */
+.genecode-sequence-label-text.genecode-sequence-label-cutsites.singleCutter {
+  font-weight: 800;
+}
+
+.genecode-sequence-cutsite-recognition {
+  shape-rendering: geometricPrecision;
+}
+
+/* Keep the sequence quiet until a restriction site is inspected. The single
+   default marker is deliberately neutral; hover switches the visual into the
+   two-strand, motif-level feedback used by SnapGene. */
+.genecode-sequence-cutsite-visual,
+.genecode-sequence-cutsite-hover-target,
+.genecode-sequence-label-group {
+  cursor: pointer;
+}
+
+.genecode-sequence-cutsite-recognition--hovered {
+  fill: #8d989f;
+  fill-opacity: 0.34;
+  stroke: #b3372f;
+  stroke-opacity: 0.72;
+}
+
+.genecode-sequence-label-group--hovered > line {
+  stroke: #b3372f;
+  stroke-width: 1.1;
+}
+
+.genecode-sequence-cutsite-label-badge {
+  fill: #ffffff;
+  stroke: #d94b43;
+  stroke-width: 1;
+}
+
+.genecode-sequence-label-text.genecode-sequence-label-cutsites-hovered {
+  fill: #d9362e;
+  font-weight: 800;
+}
+
+.genecode-sequence-label-text.genecode-sequence-label-primers {
+  fill: #2f6f9f;
+}
+
+.genecode-sequence-overflow-label {
+  fill: #6f7881;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+.genecode-sequence-amino-acid {
+  fill: #263746;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.genecode-sequence-row:focus-visible {
+  outline: 2px solid #2376b7;
+  outline-offset: -2px;
+}

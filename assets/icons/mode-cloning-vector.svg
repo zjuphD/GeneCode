@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <!-- 质粒环 - 粗线条 -->
+  <circle cx="22" cy="22" r="14" stroke="#22c55e" stroke-width="5" fill="none"/>
+
+  <!-- 插入片段 - 金色高亮 -->
+  <path d="M22 8 A14 14 0 0 1 34.5 16" stroke="#f59e0b" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+  <!-- 标记点 -->
+  <circle cx="22" cy="8" r="3.5" fill="#22c55e"/>
+  <circle cx="36" cy="22" r="3" fill="#f59e0b"/>
+</svg>

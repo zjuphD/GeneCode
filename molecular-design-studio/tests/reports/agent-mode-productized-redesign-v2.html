@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Mode Productized Redesign V2</title>
+  <style>
+    :root {
+      --bg: #f5f2e9;
+      --surface: #fbfaf5;
+      --surface-soft: #efede4;
+      --line: #d9d4c8;
+      --text: #233126;
+      --muted: #687367;
+      --green: #2f6f4f;
+      --green-soft: #e5efe6;
+      --blue: #2f6b94;
+      --amber: #a86b24;
+      --shadow: 0 14px 32px rgba(36, 45, 36, .1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      width: 1600px;
+      height: 1000px;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .app {
+      width: 1600px;
+      height: 1000px;
+      display: grid;
+      grid-template-columns: 238px minmax(0, 1fr) 400px;
+      grid-template-rows: 36px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #ebe7dc;
+      font-size: 13px;
+    }
+
+    .brand {
+      color: var(--green);
+      font-weight: 780;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #70776d;
+      font-weight: 600;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 5px;
+      background: #e1ded3;
+      color: #536054;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .nav {
+      grid-row: 2;
+      padding: 18px 14px;
+      background: #eeebe2;
+      border-right: 1px solid var(--line);
+    }
+
+    .nav h2 {
+      margin: 0 0 18px;
+      color: #777b70;
+      font-size: 12px;
+      letter-spacing: .15em;
+    }
+
+    .nav div {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 5px;
+      color: #334136;
+      font-size: 14px;
+      font-weight: 540;
+    }
+
+    .nav .active {
+      background: #dfece1;
+      color: var(--green);
+      font-weight: 780;
+    }
+
+    .main {
+      grid-row: 2;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr) 30px;
+      min-width: 0;
+      background: #fbfaf5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f1eee6;
+    }
+
+    .toolbar button {
+      height: 26px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      border-radius: 4px;
+      color: #414c42;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tool {
+      width: 32px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 4px;
+      color: var(--blue);
+      background: #e8eff3;
+      font-weight: 800;
+    }
+
+    .editor {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 55% 45%;
+    }
+
+    .sequence, .map {
+      min-width: 0;
+      overflow: hidden;
+      padding: 20px 30px;
+      position: relative;
+    }
+
+    .sequence {
+      border-right: 1px solid var(--line);
+    }
+
+    .tabs {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      color: #1f516e;
+      font-size: 16px;
+    }
+
+    .tabs span:first-child {
+      padding-bottom: 5px;
+      border-bottom: 2px solid #245f7c;
+    }
+
+    .jump {
+      margin: 18px 0 6px;
+      color: #2c6b8f;
+      font-size: 16px;
+      font-style: italic;
+    }
+
+    .enzyme {
+      color: #b16c61;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .dna {
+      margin: 12px 0 4px;
+      color: #20241f;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+      letter-spacing: .15em;
+      white-space: pre;
+    }
+
+    .feature {
+      height: 18px;
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #2148cc, #2877d7);
+      color: white;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .map-center {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 70px;
+    }
+
+    .plasmid {
+      width: 330px;
+      height: 330px;
+      border-radius: 50%;
+      position: relative;
+      background:
+        radial-gradient(circle at center, #fbfaf5 0 36%, transparent 37%),
+        conic-gradient(#1b52cf 0 80deg, #2f86dc 80deg 128deg, #1b52cf 128deg 224deg, #2f86dc 224deg 278deg, #1b52cf 278deg 360deg);
+      border: 2px solid #d2cfc5;
+      box-shadow: inset 0 0 0 24px #fbfaf5, inset 0 0 0 44px #dbe5e0, var(--shadow);
+    }
+
+    .plasmid::after {
+      content: "pUC19 demo\A2686 bps";
+      white-space: pre;
+      position: absolute;
+      inset: 118px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #28342c;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      background: #edf2f3;
+      color: #36423a;
+      font-size: 15px;
+    }
+
+    .agent {
+      grid-row: 2;
+      border-left: 1px solid var(--line);
+      background: #f5f2e9;
+      display: grid;
+      grid-template-rows: 58px minmax(0, 1fr);
+      min-width: 0;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #eee9dd;
+    }
+
+    .agent-title strong {
+      display: block;
+      font-size: 15px;
+      color: #203025;
+    }
+
+    .agent-title span {
+      color: #70776d;
+      font-size: 11px;
+      font-weight: 820;
+      letter-spacing: .12em;
+    }
+
+    .mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 32px;
+      padding: 3px;
+      border: 1px solid #d4d0c5;
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+
+    .mode span {
+      height: 24px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border-radius: 6px;
+      color: #687267;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .mode .active {
+      background: var(--green);
+      color: white;
+    }
+
+    .agent-content {
+      min-height: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .task {
+      background: #fffdf8;
+      border: 1px solid #d8d4c9;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .eyebrow {
+      margin-bottom: 9px;
+      color: #758074;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .13em;
+    }
+
+    .task-main {
+      min-height: 94px;
+      padding: 11px 12px;
+      border: 1px solid #d8d4c9;
+      border-radius: 9px;
+      background: #fbfaf5;
+      color: #213126;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .attached {
+      margin-top: 11px;
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .attached span {
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .inline-follow {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 92px;
+      gap: 8px;
+    }
+
+    .inline-follow div {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border: 1px solid #d8d4c9;
+      border-radius: 8px;
+      background: #f5f3eb;
+      color: #80877e;
+      font-size: 13px;
+    }
+
+    .inline-follow button {
+      height: 34px;
+      border: none;
+      border-radius: 8px;
+      background: var(--green);
+      color: white;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .step-panel {
+      background: #fffdf8;
+      border: 1px solid #d8d4c9;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .step-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .step-head h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #26362b;
+    }
+
+    .step-head span {
+      height: 23px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #fff5df;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 9px;
+      align-items: start;
+    }
+
+    .num {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #a6aea3;
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .step.done .num { background: var(--green); }
+    .step.current .num { background: var(--blue); }
+
+    .step b {
+      display: block;
+      color: #223126;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .decision {
+      background: #fff8e9;
+      border: 1px solid #dfc694;
+      border-radius: 12px;
+      padding: 13px;
+    }
+
+    .decision strong {
+      display: block;
+      margin-bottom: 7px;
+      color: #714b17;
+      font-size: 14px;
+    }
+
+    .decision p {
+      margin: 0 0 11px;
+      color: #4d4130;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .decision-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .decision-actions button {
+      height: 33px;
+      border-radius: 8px;
+      border: 1px solid #d9bb85;
+      background: #fffaf0;
+      color: #714b17;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .decision-actions .go {
+      background: #f2dfb8;
+    }
+
+    .evidence {
+      background: #fffdf8;
+      border: 1px solid #d8d4c9;
+      border-radius: 12px;
+      padding: 13px;
+    }
+
+    .evidence-row {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      min-height: 34px;
+      color: #2e3b31;
+      font-size: 12px;
+    }
+
+    .small-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: #e8eff3;
+      color: var(--blue);
+      font-weight: 860;
+    }
+
+    .small-muted {
+      color: var(--muted);
+    }
+
+    .mini-tag {
+      height: 21px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: #edf4f0;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .why {
+      position: absolute;
+      left: 772px;
+      top: 92px;
+      width: 338px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(47, 111, 79, .94);
+      color: white;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .why b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">Molecular Design Studio</div>
+      <div class="top-meta">
+        当前项目
+        <span class="chip">pUC19 demo</span>
+        <span class="chip">2,686 bp</span>
+        <span class="chip">circular</span>
+      </div>
+    </header>
+
+    <aside class="nav">
+      <h2>PROJECT</h2>
+      <div class="active">Sequences</div>
+      <div>Primers</div>
+      <div>Cloning</div>
+      <div>Restriction Map</div>
+      <div>Annotations</div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button>Open</button>
+        <button>Save File</button>
+        <button>Save File As</button>
+        <div class="tool">↺</div>
+        <div class="tool">↻</div>
+        <div class="tool">▣</div>
+        <div class="tool">⌕</div>
+        <div class="tool">◉</div>
+      </div>
+
+      <section class="editor">
+        <div class="sequence">
+          <div class="tabs"><span>Sequence Map</span></div>
+          <div class="jump">↓ Jump to end</div>
+          <div class="enzyme">SapI</div>
+          <div class="dna">CGCCAATA CGCAAACGCC TCTCCCCGC CGTTGGC
+CGCGGTTAT GCGTTTGCGG AGAGGGGCG GCAACCG</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="dna">CGATTCATT AATGCAGCT GGCACGACA GGTTTCCGAC
+GCTAAGTAA TTACGTCGA CCGTGCTGT CCAAAGGCTG</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="dna">TTGGAAAGC GGCAGTGAC GCAACGCAA TTAATGTGAG
+AACCTTTCG CCGTCACTG CGTTGCGTT AATTACACTC</div>
+          <div class="feature">Cloning vector pUC19</div>
+          <div class="feature">M13mp19</div>
+          <div class="feature">Lac-operon</div>
+          <div class="enzyme" style="margin-top:24px">EcoRI &nbsp; HindIII &nbsp; BamHI &nbsp; XbaI</div>
+          <div class="dna">CGCCAGGG TTTTCCCAG TCACGACG TTGTAAAAC
+GCGGTCCC AAAAGGGTC AGTGCTGC AACATTTTG</div>
+          <div class="feature">polylinker of M13mp19</div>
+        </div>
+
+        <div class="map">
+          <div class="tabs"><span>Circular Map</span><span>Linear Map</span></div>
+          <div class="map-center"><div class="plasmid"></div></div>
+        </div>
+      </section>
+
+      <div class="status">
+        <div>Circular</div>
+        <div>No Selection &nbsp; <span style="color:#3480a9">Select Inverse</span></div>
+        <div>Length: 2686 bps</div>
+      </div>
+    </main>
+
+    <aside class="agent">
+      <div class="agent-header">
+        <div class="agent-title">
+          <strong>Design Agent</strong>
+          <span>LOCAL MOLECULAR CO-PILOT</span>
+        </div>
+        <div class="mode"><span>Ask</span><span class="active">Plan</span><span>Act</span></div>
+      </div>
+
+      <div class="agent-content">
+        <section class="task">
+          <div class="eyebrow">CURRENT TASK</div>
+          <div class="task-main">把目标片段克隆进 pUC19，检查酶切位点冲突，设计 Gibson 引物，并给出可执行实验步骤。</div>
+          <div class="attached">
+            <span>已附加当前质粒</span>
+            <span>2,686 bp</span>
+            <span>8 features</span>
+          </div>
+          <div class="inline-follow">
+            <div>补充条件，例如片段序列、酶切策略、Tm 范围...</div>
+            <button>更新任务</button>
+          </div>
+        </section>
+
+        <section class="step-panel">
+          <div class="step-head">
+            <h3>Agent 当前理解</h3>
+            <span>等待确认</span>
+          </div>
+          <div class="timeline">
+            <div class="step done">
+              <div class="num">1</div>
+              <div>
+                <b>已读取当前载体</b>
+                <p>pUC19 demo，环状，已识别注释与多克隆位点区域。</p>
+              </div>
+            </div>
+            <div class="step current">
+              <div class="num">2</div>
+              <div>
+                <b>下一步：准备设计参数</b>
+                <p>需要确认目标片段来源、拼接方式和是否避开特定限制酶位点。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="num">3</div>
+              <div>
+                <b>确认后才运行工具</b>
+                <p>运行 Primer3、限制酶检查和风险评估，输出候选方案。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="decision">
+          <strong>Agent 要问你的不是“再聊一句”，而是补齐任务信息</strong>
+          <p>当前缺少目标片段序列或 accession。补齐后 Agent 才进入工具运行阶段。</p>
+          <div class="decision-actions">
+            <button class="go">粘贴片段序列</button>
+            <button>先用示例片段</button>
+          </div>
+        </section>
+
+        <section class="evidence">
+          <div class="eyebrow">VISIBLE WORK</div>
+          <div class="evidence-row">
+            <div class="small-icon">D</div>
+            <div><b>上下文</b><br><span class="small-muted">当前质粒、注释、拓扑结构</span></div>
+            <span class="mini-tag">ready</span>
+          </div>
+          <div class="evidence-row">
+            <div class="small-icon">T</div>
+            <div><b>待调用工具</b><br><span class="small-muted">Primer3 / restriction scan / risk check</span></div>
+            <span class="mini-tag">after confirm</span>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <div class="why">
+      <b>这一版去掉底部聊天框</b>
+      追问不是另开一个 chat，而是在当前任务卡里补充信息；右侧只保留“当前任务、当前理解、需要确认、可见工作”四块。
+    </div>
+  </div>
+</body>
+</html>

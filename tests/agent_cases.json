@@ -1,0 +1,697 @@
+{
+  "version": 3,
+  "description": "GeneCode Agent release-gate cases. The deterministic suite runs with LLM disabled and validates routing, execution safety, molecular invariants, review, and artifacts.",
+  "defaults": {
+    "llm": {
+      "enabled": false
+    }
+  },
+  "cases": [
+    {
+      "id": "rtqpcr_sequence_ready",
+      "name": "RT-qPCR: sequence context should route and execute",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物，先不用 TaqMan 探针",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "strain": "",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_rtqpcr"],
+        "execute": true,
+        "minResults": 1,
+        "resultChecks": {
+          "ampliconMin": 70,
+          "ampliconMax": 160
+        }
+      }
+    },
+    {
+      "id": "sgrna_sequence_ready",
+      "name": "sgRNA: DNA sequence should route and execute",
+      "prompt": "帮我为当前这段 DNA 设计 sgRNA，做 knock-out",
+      "snapshot": {
+        "lastWorkbenchPage": "sgrna",
+        "currentMode": "ko",
+        "formState": {
+          "sg": {
+            "sequence": "$fixture:default_dna_520",
+            "query": "",
+            "label": "Harness sgRNA target",
+            "species": "Homo sapiens",
+            "strain": "",
+            "mode": "ko",
+            "pamSet": "spcas9_ngg"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "sgrna",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_sgrna"],
+        "execute": true,
+        "minResults": 1
+      }
+    },
+    {
+      "id": "sirna_sequence_ready",
+      "name": "siRNA: transcript sequence should route and execute",
+      "prompt": "帮我为当前 mRNA 序列设计一组 siRNA，输出 dTdT overhang",
+      "snapshot": {
+        "lastWorkbenchPage": "sirna",
+        "formState": {
+          "sirna": {
+            "sequence": "$fixture:default_dna_520",
+            "query": "",
+            "label": "Harness siRNA target",
+            "species": "Homo sapiens",
+            "strain": "",
+            "duplexLength": 21,
+            "overhangMode": "dtdt",
+            "preferShared": false,
+            "cdsOnly": false,
+            "excludeHighRisk": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "sirna",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_sirna"],
+        "execute": true,
+        "minResults": 1
+      }
+    },
+    {
+      "id": "cloning_gibson_ready",
+      "name": "Cloning: Gibson inputs should route and execute",
+      "prompt": "帮我用 Gibson 给这个 insert 设计克隆引物",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {
+            "sequence": "$fixture:default_insert_300",
+            "label": "Harness insert",
+            "method": "gibson",
+            "leftHomology": "$fixture:left_homology_20",
+            "rightHomology": "$fixture:right_homology_20",
+            "homologyLength": 20
+          }
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "gibson"
+      }
+    },
+    {
+      "id": "mutagenesis_dna_ready",
+      "name": "Mutagenesis: DNA point mutation should route and execute",
+      "prompt": "帮我给当前模板做 C120T 点突变引物",
+      "snapshot": {
+        "lastWorkbenchPage": "mutation",
+        "formState": {
+          "mutation": {
+            "sequence": "$fixture:default_dna_520",
+            "label": "Harness C120T",
+            "mode": "dna",
+            "position": 120,
+            "reference": "C",
+            "alternate": "T"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "mutagenesis",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_mutagenesis"],
+        "execute": true,
+        "minResults": 1
+      }
+    },
+    {
+      "id": "cloning_gfp_missing_insert",
+      "name": "Cloning: GFP without sequence should ask for insert",
+      "prompt": "设计 GFP 的克隆引物，你帮我找",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {}
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": false,
+        "execute": false,
+        "missingContains": ["insert", "序列"]
+      }
+    },
+    {
+      "id": "project_memory_cloning_continue",
+      "name": "Memory: project-level cloning inputs should continue task",
+      "prompt": "继续刚才的克隆任务，直接生成方案",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {}
+        },
+        "agentMemory": {
+          "project": {
+            "version": 1,
+            "projectId": "harness_memory_project",
+            "name": "Harness remembered cloning project",
+            "workspaces": {
+              "cloning": {
+                "inputs": {
+                  "sequence": "$fixture:default_insert_300",
+                  "label": "Remembered insert",
+                  "method": "gibson",
+                  "leftHomology": "$fixture:left_homology_20",
+                  "rightHomology": "$fixture:right_homology_20",
+                  "homologyLength": 20
+                },
+                "decisions": ["优先 Gibson"],
+                "openQuestions": []
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "gibson"
+      }
+    },
+    {
+      "id": "rtqpcr_short_sequence_stops",
+      "name": "RT-qPCR: short pasted sequence should ask for longer input",
+      "prompt": "帮我给这段序列设计 RT-qPCR 引物",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "ATGCGTACGTAGCTA",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": false,
+        "execute": false,
+        "missingContains": ["90 bp", "序列"]
+      }
+    },
+    {
+      "id": "cloning_gibson_missing_homology",
+      "name": "Cloning: Gibson insert without homology should stop for junctions",
+      "prompt": "帮我用 Gibson 给这个 insert 设计克隆引物",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {
+            "sequence": "$fixture:default_insert_300",
+            "label": "Harness insert without junction",
+            "method": "gibson"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": false,
+        "execute": false,
+        "recommendedMethod": "gibson",
+        "missingContains": ["homology"]
+      }
+    },
+    {
+      "id": "sgrna_no_pam_execute_guard",
+      "name": "sgRNA: no PAM sequence should fail during deterministic tool execution",
+      "prompt": "帮我为当前这段 DNA 设计 sgRNA",
+      "snapshot": {
+        "lastWorkbenchPage": "sgrna",
+        "currentMode": "ko",
+        "formState": {
+          "sg": {
+            "sequence": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "query": "",
+            "label": "Harness no PAM target",
+            "species": "Homo sapiens",
+            "strain": "",
+            "mode": "ko",
+            "pamSet": "spcas9_ngg"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "sgrna",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_sgrna"],
+        "execute": true,
+        "executeErrorContains": ["没有找到", "PAM"]
+      }
+    },
+    {
+      "id": "mutagenesis_reference_mismatch_guard",
+      "name": "Mutagenesis: reference mismatch should fail before returning primers",
+      "prompt": "帮我给当前模板做 A120T 点突变引物",
+      "snapshot": {
+        "lastWorkbenchPage": "mutation",
+        "formState": {
+          "mutation": {
+            "sequence": "$fixture:default_dna_520",
+            "label": "Harness bad reference",
+            "mode": "dna",
+            "position": 120,
+            "reference": "A",
+            "alternate": "T"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "mutagenesis",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_mutagenesis"],
+        "execute": true,
+        "executeErrorContains": ["实际是", "不一致"]
+      }
+    },
+    {
+      "id": "cloning_restriction_ready",
+      "name": "Cloning: restriction mode with vector should route and execute",
+      "prompt": "帮我用双酶切给这个 insert 设计克隆引物，用 EcoRI 和 BamHI",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {
+            "sequence": "$fixture:default_insert_300",
+            "label": "Harness restriction insert",
+            "method": "restriction",
+            "forwardSite": "EcoRI",
+            "reverseSite": "BamHI",
+            "clampLength": 4,
+            "vectorSequence": "$fixture:vector_with_ecori_bamhi",
+            "vectorTopology": "circular"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "restriction"
+      }
+    },
+    {
+      "id": "cloning_golden_gate_ready",
+      "name": "Cloning: Golden Gate mode should route and execute",
+      "prompt": "帮我用 Golden Gate 给这个 insert 设计克隆引物",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {
+            "sequence": "$fixture:default_insert_300",
+            "label": "Harness golden gate insert",
+            "method": "golden_gate",
+            "typeIisEnzyme": "BsaI",
+            "leftOverhang": "AATG",
+            "rightOverhang": "GCTT",
+            "goldenGateClampLength": 4
+          }
+        }
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "golden_gate"
+      }
+    },
+    {
+      "id": "agent_chat_explicit_workspace_sgrna",
+      "name": "Agent: explicit workspace=sgrna should not be overridden by inference",
+      "prompt": "design guides for this target",
+      "workspace": "sgrna",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "sg": {
+            "sequence": "$fixture:default_dna_520",
+            "query": "",
+            "label": "Explicit workspace test",
+            "species": "Homo sapiens",
+            "mode": "ko",
+            "pamSet": "spcas9_ngg"
+          }
+        }
+      },
+      "expect": {
+        "workspace": "sgrna",
+        "readyToExecute": true
+      }
+    },
+    {
+      "id": "agent_chat_fast_mode",
+      "name": "Agent: fast runMode should skip LLM rewrite",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "runMode": "fast",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "runMode": "fast",
+        "usedRewrite": false,
+        "finalReviewContains": ["快速模式"]
+      }
+    },
+    {
+      "id": "agent_chat_precise_mode",
+      "name": "Agent: precise runMode should add sanity check to finalReview",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "runMode": "precise",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "runMode": "precise",
+        "finalReviewContains": ["审慎模式"]
+      }
+    },
+    {
+      "id": "sequence_too_long_rtqpcr",
+      "name": "RT-qPCR: sequence exceeding 10000 bp should be rejected",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:long_sequence_10001",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "execute": true,
+        "executeErrorContains": ["超过", "上限"]
+      }
+    },
+    {
+      "id": "multi_turn_cloning",
+      "name": "Multi-turn: first turn missing insert, second turn provides it",
+      "prompt": "好的，这是 insert 序列，请继续设计",
+      "snapshot": {
+        "lastWorkbenchPage": "cloning",
+        "formState": {
+          "cloning": {
+            "sequence": "$fixture:default_insert_300",
+            "label": "Multi-turn insert",
+            "method": "gibson",
+            "leftHomology": "$fixture:left_homology_20",
+            "rightHomology": "$fixture:right_homology_20",
+            "homologyLength": 20
+          }
+        }
+      },
+      "history": [
+        {"role": "user", "content": "帮我用 Gibson 设计克隆引物"},
+        {"role": "assistant", "content": "请先提供 insert 序列。"}
+      ],
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "gibson"
+      }
+    },
+    {
+      "id": "auto_execute_balanced_mode",
+      "name": "Auto-execute: balanced mode should set autoExecute flag",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "runMode": "balanced",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "runMode": "balanced",
+        "autoExecute": true
+      }
+    },
+    {
+      "id": "auto_execute_precise_no_auto",
+      "name": "Auto-execute: precise mode should NOT set autoExecute",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "runMode": "precise",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "runMode": "precise",
+        "autoExecute": false
+      }
+    },
+    {
+      "id": "execute_with_verification",
+      "name": "Execute: pipeline should include verification step in runLog",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "runMode": "balanced",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "execute": true,
+        "minResults": 1,
+        "runLogContains": ["引物质量检查"]
+      }
+    },
+    {
+      "id": "cloning_multifragment_gibson_ready",
+      "name": "Cloning: ordered multi-fragment Gibson design should preserve every junction",
+      "category": "cloning",
+      "tags": ["golden-case", "multi-fragment", "gibson"],
+      "prompt": "请按结构化设置规划当前载体的多片段 Gibson 克隆方案。",
+      "structuredInputs": {
+        "method": "gibson",
+        "fragments": [
+          {
+            "name": "Reporter",
+            "sequence": "$fixture:default_insert_300"
+          },
+          {
+            "name": "Linker cassette",
+            "sequence": "$fixture:default_dna_520"
+          }
+        ],
+        "leftHomology": "$fixture:left_homology_20",
+        "rightHomology": "$fixture:right_homology_20",
+        "homologyLength": 20
+      },
+      "snapshot": {
+        "lastWorkbenchPage": "cloning"
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "gibson"
+      }
+    },
+    {
+      "id": "cloning_multifragment_golden_gate_ready",
+      "name": "Cloning: ordered multi-fragment Golden Gate design should preserve overhang order",
+      "category": "cloning",
+      "tags": ["golden-case", "multi-fragment", "golden-gate"],
+      "prompt": "请按结构化设置规划当前载体的多片段 Golden Gate 克隆方案。",
+      "structuredInputs": {
+        "method": "golden_gate",
+        "fragments": [
+          {
+            "name": "Reporter",
+            "sequence": "$fixture:default_insert_300"
+          },
+          {
+            "name": "Linker cassette",
+            "sequence": "$fixture:default_dna_520"
+          }
+        ],
+        "typeIisEnzyme": "BsaI",
+        "leftOverhang": "AATG",
+        "fragmentOverhangs": ["GCTT"],
+        "rightOverhang": "CGAG",
+        "goldenGateClampLength": 4
+      },
+      "snapshot": {
+        "lastWorkbenchPage": "cloning"
+      },
+      "expect": {
+        "workspace": "cloning",
+        "readyToExecute": true,
+        "tools": ["parse_sequence", "design_cloning"],
+        "execute": true,
+        "minResults": 1,
+        "recommendedMethod": "golden_gate"
+      }
+    },
+    {
+      "id": "stale_snapshot_execute_guard",
+      "name": "Safety: execution must reject a plan created for an older sequence",
+      "category": "safety",
+      "tags": ["stale-context", "execute-guard"],
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "executeOverrides": {
+        "planSnapshotHash": "fnv1a64-v1:planned-document",
+        "snapshot": {
+          "documentHash": "fnv1a64-v1:changed-document"
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "execute": true,
+        "executeErrorContains": ["序列已在规划后被修改", "重新规划"]
+      }
+    },
+    {
+      "id": "review_mode_execute_guard",
+      "name": "Safety: review mode must never execute design tools",
+      "category": "safety",
+      "tags": ["permissions", "execute-guard"],
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "executeOverrides": {
+        "agentMode": "review"
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "execute": true,
+        "executeErrorContains": ["复核模式", "不支持执行"]
+      }
+    },
+    {
+      "id": "duplicate_execute_guard",
+      "name": "Safety: duplicate execute requests must be rejected",
+      "category": "safety",
+      "tags": ["idempotency", "execute-guard"],
+      "requestId": "$auto",
+      "prompt": "帮我给当前序列设计 RT-qPCR 引物",
+      "snapshot": {
+        "lastWorkbenchPage": "rtqpcr",
+        "formState": {
+          "rt": {
+            "query": "$fixture:default_dna_520",
+            "species": "Homo sapiens",
+            "gdnaCheck": false,
+            "includeProbe": false
+          }
+        }
+      },
+      "expect": {
+        "workspace": "rtqpcr",
+        "readyToExecute": true,
+        "execute": true,
+        "minResults": 1,
+        "repeatExecuteErrorContains": ["请勿重复提交"]
+      }
+    }
+  ]
+}

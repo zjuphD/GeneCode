@@ -1,0 +1,31 @@
+node_modules/
+dist/
+target/
+SBOM.cyclonedx.json
+backups/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.swp
+*.tsbuildinfo
+.playwright-cli/
+output/playwright/
+tmp/
+
+# Local orchestration state and Claude transcripts.
+.orchestration/runs/
+.orchestration/sessions/
+.orchestration/base/
+.orchestration/reports/
+
+# Tauri signing and local build material.
+*.p12
+*.mobileprovision
+src-tauri/gen/
+
+# Reproducible local Agent sidecar build output.
+.packaging/
+src-tauri/binaries/agent-server

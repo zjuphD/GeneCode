@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <defs>
+    <linearGradient id="koTile" x1="7" y1="4" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="41.5" height="41.5" rx="14" fill="url(#koTile)" stroke="#B7DDF6" stroke-width="1.5"/>
+  <path d="M10 22H34" stroke="#CFE4F5" stroke-width="2" stroke-linecap="round"/>
+  <rect x="12" y="18" width="7.5" height="8" rx="3.5" fill="#0B8FD3"/>
+  <rect x="24.5" y="18" width="7.5" height="8" rx="3.5" fill="#12B981"/>
+  <path d="M19 15L25 29" stroke="#F59E0B" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M25 15L19 29" stroke="#F59E0B" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M14 31H30" stroke="#7C5CFF" stroke-width="2.3" stroke-linecap="round" stroke-dasharray="2 4"/>
+</svg>

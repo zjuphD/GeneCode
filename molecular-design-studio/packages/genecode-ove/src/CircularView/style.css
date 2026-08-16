@@ -1,0 +1,55 @@
+.veCircularViewMiddleOfVectorText {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  text-align: center;
+  /* This is a shorthand of
+                                           translateX(-50%) and translateY(-50%) */
+}
+
+.selectionLayerInverseWrapper {
+  fill: none !important;
+}
+
+.veHideLabels .veLabels,
+.veHideLabels .veCircularViewMiddleOfVectorText {
+  display: none;
+}
+
+.circularViewMinimap {
+  margin: 4px;
+  --v: calc(((18 / 5) * var(--p) - 90) * 1deg);
+  --bg: #fff;
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  border-radius: 50%;
+  padding: 5px;
+  background:
+    linear-gradient(var(--bg), var(--bg)) content-box,
+    linear-gradient(var(--v), #ccc 50%, transparent 0) 0 /
+      min(100%, calc(50 - var(--p)) * 100%),
+    linear-gradient(var(--v), transparent 50%, #4ac5ed 0) 0 /
+      min(100%, calc(var(--p) - 50) * 100%),
+    linear-gradient(to right, #ccc 50%, #4ac5ed 0);
+}
+.bp3-dark .circularViewMinimap {
+  --bg: #293742;
+}
+.veCircularView .ve-monospace-font.veCircularViewInternalLabelText {
+  font-size: 13px;
+}
+.veCircularView {
+  pointer-events: initial;
+}
+
+/* Cut-site markers: the engine's Cutsite rect ships without a fill, so in the
+   light theme SVG's default black renders a barely-visible 1px hairline
+   (audit P4). Give it a visible cut-marker color; the dark theme keeps its own
+   override (.bp3-dark .veCutsite) via higher specificity. */
+.veCutsite {
+  fill: #c0504d;
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "$comment": "A-ALG-002 single source of truth for Type IIS (Golden Gate) enzymes. Consumed by: src/editor/enzymeData.ts (frontend TYPE_IIS_SITES / menus), src/editor/assembly.ts (internal-site checks), and the Python sidecar via tests/test_enzyme_data_consistency.py which asserts server.py RESTRICTION_ENZYME_LIBRARY stays in sync. cutsTop/cutsBottom are 0-based cut positions measured from the motif start on the forward strand (same convention as server.py and NEB's recognition(+/-) notation where +N means N bases past the motif end).",
+  "typeIis": {
+    "BsaI": {
+      "recognitionSite": "GGTCTC",
+      "cutsTop": [7],
+      "cutsBottom": [11],
+      "overhangLength": 4,
+      "aliases": ["Eco31I"]
+    },
+    "BsmBI": {
+      "recognitionSite": "CGTCTC",
+      "cutsTop": [7],
+      "cutsBottom": [11],
+      "overhangLength": 4,
+      "aliases": ["Esp3I"]
+    },
+    "Esp3I": {
+      "recognitionSite": "CGTCTC",
+      "cutsTop": [7],
+      "cutsBottom": [11],
+      "overhangLength": 4,
+      "isAliasOf": "BsmBI"
+    },
+    "SapI": {
+      "recognitionSite": "GCTCTTC",
+      "cutsTop": [8],
+      "cutsBottom": [11],
+      "overhangLength": 3,
+      "aliases": ["LguI"]
+    },
+    "BbsI": {
+      "recognitionSite": "GAAGAC",
+      "cutsTop": [8],
+      "cutsBottom": [12],
+      "overhangLength": 4
+    },
+    "AarI": {
+      "recognitionSite": "CACCTGC",
+      "cutsTop": [12],
+      "cutsBottom": [16],
+      "overhangLength": 4
+    }
+  },
+  "goldenGateGroup": ["AarI", "BbsI", "BsaI", "BsmBI", "Esp3I", "SapI"],
+  "commonCloningGroup": [
+    "BamHI", "EcoRI", "HindIII", "KpnI", "NheI", "NotI", "PstI", "SacI", "SalI", "SmaI", "SpeI", "XbaI", "XhoI"
+  ]
+}

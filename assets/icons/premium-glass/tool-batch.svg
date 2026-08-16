@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <defs>
+    <linearGradient id="batchTile" x1="7" y1="4" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="41.5" height="41.5" rx="14" fill="url(#batchTile)" stroke="#B7DDF6" stroke-width="1.5"/>
+  <rect x="11" y="11" width="22" height="22" rx="5" fill="#F8FCFF" stroke="#CFE4F5" stroke-width="1.6"/>
+  <path d="M11 18H33" stroke="#CFE4F5" stroke-width="1.6"/>
+  <path d="M11 25H33" stroke="#CFE4F5" stroke-width="1.6"/>
+  <path d="M18 11V33" stroke="#CFE4F5" stroke-width="1.6"/>
+  <path d="M25 11V33" stroke="#CFE4F5" stroke-width="1.6"/>
+  <rect x="13.5" y="13.5" width="3" height="3" rx="1.5" fill="#0B8FD3"/>
+  <rect x="20.5" y="20.5" width="3" height="3" rx="1.5" fill="#12B981"/>
+  <rect x="27.5" y="27.5" width="3" height="3" rx="1.5" fill="#7C5CFF"/>
+</svg>

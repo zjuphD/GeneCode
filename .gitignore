@@ -1,0 +1,42 @@
+# Secrets and local state — never version these (A-SEC-001)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+
+# Wrangler / Cloudflare tunnel credentials and cache
+.wrangler/
+
+# Runtime caches and databases
+.freebuff/
+.runtime-cache/
+__pycache__/
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Editor and OS noise
+.DS_Store
+*.swp
+*.log
+/.playwright-cli/
+/server.py.bak-*
+
+# Independent nested git repos and local worktrees
+/deploy/
+/skills/
+/AI_Camp_RNA_2026/
+/AI_Camp_RNA_2026.worktrees/
+
+# A-REL-003: old single-file product generations archived under legacy/
+# (deploy/ moved here with its own .git; the nested repo stays unabsorbed)
+/legacy/deploy/
+
+# Frontend build + dependency artifacts
+/molecular-design-studio/node_modules/
+/molecular-design-studio/dist/

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- 时钟外框 -->
+  <circle cx="100" cy="80" r="50" stroke="#22c55e" stroke-width="4" fill="none"/>
+
+  <!-- 时钟刻度 -->
+  <line x1="100" y1="35" x2="100" y2="42" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="118" x2="100" y2="125" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="55" y1="80" x2="62" y2="80" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="138" y1="80" x2="145" y2="80" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- 指针 -->
+  <line x1="100" y1="80" x2="100" y2="55" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+  <line x1="100" y1="80" x2="125" y2="80" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- 中心点 -->
+  <circle cx="100" cy="80" r="5" fill="#22c55e"/>
+
+  <!-- 空状态提示 -->
+  <rect x="70" y="130" width="60" height="6" rx="3" fill="#22c55e" opacity="0.4"/>
+</svg>

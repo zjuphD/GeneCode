@@ -1,0 +1,53 @@
+{
+  "name": "Premium Glass Lab",
+  "version": "2026-05-06",
+  "principles": [
+    "Use generated raster images for atmosphere, previews, and empty states.",
+    "Keep scientific diagrams data-driven with SVG or Canvas so plasmids, primers, tracks, and labels can change.",
+    "Use SVG for small UI icons when they need crisp scaling, active states, or theme-color control."
+  ],
+  "palette": {
+    "surface": ["#ffffff", "#f5fbff", "#eaf6ff"],
+    "ink": ["#081827", "#294866", "#6c83a0"],
+    "accents": ["#0b8fd3", "#12b981", "#7c5cff", "#f59e0b"]
+  },
+  "assets": {
+    "backgrounds": {
+      "agentWorkbench": "assets/backgrounds/agent-workbench-premium-glass.png"
+    },
+    "previews": {
+      "agentDesignCanvas": "assets/previews/agent-design-canvas-premium-glass.png"
+    },
+    "emptyStates": {
+      "projects": "assets/illustrations/empty-projects-premium-glass.png",
+      "history": "assets/illustrations/empty-history-premium-glass.png",
+      "noResults": "assets/illustrations/empty-no-results-premium-glass.png",
+      "processing": "assets/illustrations/empty-processing-premium-glass.png",
+      "uploadSequence": "assets/illustrations/empty-upload-sequence-premium-glass.png",
+      "agentWaiting": "assets/illustrations/empty-agent-waiting-premium-glass.png",
+      "sourceSheet": "assets/illustrations/empty-states-premium-glass-sheet.png"
+    },
+    "styleReferences": {
+      "selectedStyleBoard": "assets/styleboards/premium-glass-lab-selected.png",
+      "bioUiIconSheet": "assets/icons/premium-glass/bio-ui-icon-sheet.png"
+    },
+    "icons": {
+      "rtqpcr": "assets/icons/premium-glass/tool-rtqpcr.svg",
+      "sgrna": "assets/icons/premium-glass/tool-sgrna.svg",
+      "sirna": "assets/icons/premium-glass/tool-sirna.svg",
+      "sequencePrimer": "assets/icons/premium-glass/tool-sequence-primer.svg",
+      "cloning": "assets/icons/premium-glass/tool-cloning.svg",
+      "mutation": "assets/icons/premium-glass/tool-mutation.svg",
+      "history": "assets/icons/premium-glass/tool-history.svg",
+      "batch": "assets/icons/premium-glass/tool-batch.svg",
+      "knockout": "assets/icons/premium-glass/tool-ko.svg",
+      "knockin": "assets/icons/premium-glass/tool-ki.svg",
+      "run": "assets/icons/premium-glass/tool-run.svg"
+    }
+  },
+  "nextAssetsToProduce": [
+    "Single-purpose SVG icon set matching the Premium Glass Lab line weight.",
+    "Data-driven SVG plasmid renderer tokens for feature color, label, selection, and risk state.",
+    "Data-driven exon/primer track renderer tokens for primer, probe, amplicon, and warning states."
+  ]
+}

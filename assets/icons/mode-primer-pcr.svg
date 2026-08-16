@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <!-- DNA双螺旋 - 简化版 -->
+  <circle cx="22" cy="18" r="8" stroke="#22c55e" stroke-width="3" fill="none"/>
+
+  <!-- 正向引物 - 大箭头 -->
+  <g>
+    <rect x="4" y="28" width="14" height="6" rx="3" fill="#22c55e"/>
+    <polygon points="18,31 24,26 24,36" fill="#22c55e"/>
+  </g>
+
+  <!-- 反向引物 - 大箭头 -->
+  <g>
+    <polygon points="20,38 26,33 26,43" fill="#f59e0b"/>
+    <rect x="26" y="38" width="14" height="6" rx="3" fill="#f59e0b"/>
+  </g>
+
+  <!-- 扩增产物标记 -->
+  <rect x="16" y="12" width="12" height="3" rx="1.5" fill="#22c55e" opacity="0.8"/>
+</svg>

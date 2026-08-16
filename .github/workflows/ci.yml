@@ -1,0 +1,131 @@
+name: CI
+
+# A-CI-001: gate every push/PR on the full quality ladder from a clean
+# checkout. Order matters — cheap checks fail fast, expensive ones run last.
+#   lint → typecheck → vitest (unit) → engine smoke → Python unittest → build
+#
+# Repo layout (checked out at $GITHUB_WORKSPACE):
+#   server.py, tests/          — Python agent backend + its regression suite
+#   molecular-design-studio/   — frontend (npm, vendored genecode-ove fork)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend — lint / typecheck / unit / smoke / build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: molecular-design-studio
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify complete workspace checkout
+        run: test -f package-lock.json && test -f src/App.tsx
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: molecular-design-studio/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (vitest run)
+        run: npm run test:ci
+
+      - name: Engine smoke (vendored genecode-ove fork compiles + runs)
+        # The fork is imported through Vite's JSX transform inside vitest, so a
+        # green run proves the vendored engine still parses in this toolchain.
+        run: npx vitest run src/editor/engineSmoke.test.ts
+
+      # A-SUPPLY-001: the vendored engine fork has no lockfile of its own; its
+      # dependencies are governed by the root lockfile. This gate fails if a
+      # fork dep spec drifts out of range of the lockfile, or if a mirror URL
+      # sneaks back into the lockfile (breaks npm ci provenance).
+      - name: Verify fork deps resolve to the root lockfile
+        run: node scripts/verify-fork-deps.mjs
+
+      - name: Production build (lint → tsc → vite)
+        run: npm run build
+
+      # A-SUPPLY-001: the default registry is npmmirror whose audit endpoint
+      # is not implemented (404). Audit against the official registry, and
+      # keep the step non-blocking — remaining advisories are all transitive
+      # from the vendored @teselagen/ove engine tree (no upstream fix yet), so
+      # they are tracked in the SBOM + report, not silently ignored.
+      - name: npm audit (official registry, high+)
+        run: npm audit --registry=https://registry.npmjs.org --audit-level=high
+        continue-on-error: true
+
+      - name: Generate CycloneDX SBOM
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file SBOM.cyclonedx.json --package-lock-only --ignore-npm-errors --output-reproducible
+
+      - name: Copy SBOM into dist for the manifest
+        run: cp SBOM.cyclonedx.json dist/
+
+      - name: Generate release manifest + checksums
+        run: node scripts/generate-release-manifest.mjs
+
+      # A-SUPPLY-001: OSV vulnerability scan over all lockfiles (npm, Cargo,
+      # pip). Reported but non-blocking — remaining advisories are documented
+      # accepted risks (see docs/RELEASING.md) until the engine tree upgrades.
+      # Pinned to a full-commit ref for the v2.5.0 tag (tag references drift),
+      # and uses the v2 `scan-args` input (the v1 `args` input no longer
+      # exists). Verified locally that osv-scanner v2 content-sniffs
+      # requirements-agent.txt as a pip requirements file despite the
+      # non-standard name.
+      - name: OSV supply-chain scan
+        uses: google/osv-scanner-action@0c58c542420dfd23fcac08dd9c8ca3cca9c36f1a # v2.5.0
+        continue-on-error: true
+        with:
+          scan-args: |-
+            molecular-design-studio/package-lock.json
+            molecular-design-studio/src-tauri/Cargo.lock
+            requirements-agent.txt
+
+      - name: Upload SBOM + manifest artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: genecode-sbom
+          path: |
+            molecular-design-studio/SBOM.cyclonedx.json
+            molecular-design-studio/dist/release-manifest.json
+            molecular-design-studio/dist/release-manifest.sha256
+
+  python:
+    name: Python — agent backend unittest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-agent.txt
+
+      - name: Agent backend unittest (hermetic, no model calls)
+        # AGENT_LLM_ENABLED=0 keeps the suite deterministic; the tests import
+        # server.py relative to their own location, so discovery works from
+        # any CWD as long as the repo root is checked out.
+        run: |
+          cd tests && AGENT_LLM_ENABLED=0 python3 -m unittest discover -s . -p "test_*.py" -v

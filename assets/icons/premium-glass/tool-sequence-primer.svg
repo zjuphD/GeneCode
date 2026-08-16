@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <defs>
+    <linearGradient id="seqTile" x1="7" y1="4" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="41.5" height="41.5" rx="14" fill="url(#seqTile)" stroke="#B7DDF6" stroke-width="1.5"/>
+  <path d="M12 15H29" stroke="#CFE4F5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 22H25" stroke="#CFE4F5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 29H21" stroke="#CFE4F5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M25.5 27.5L32.8 20.2C33.8 19.2 35.4 19.2 36.4 20.2C37.4 21.2 37.4 22.8 36.4 23.8L29.1 31.1L24 32.5L25.5 27.5Z" fill="#F5FBFF" stroke="#0B8FD3" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M31 22L34.6 25.6" stroke="#7C5CFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 34C16 32 19.5 32 23.5 34" stroke="#12B981" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

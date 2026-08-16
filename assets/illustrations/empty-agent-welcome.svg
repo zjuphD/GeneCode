@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none">
+  <defs>
+    <linearGradient id="welcome-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3f7f4"/>
+      <stop offset="100%" stop-color="#e3e7e3"/>
+    </linearGradient>
+    <linearGradient id="welcome-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#85b692"/>
+      <stop offset="100%" stop-color="#5e9a6f"/>
+    </linearGradient>
+    <linearGradient id="welcome-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c996"/>
+      <stop offset="100%" stop-color="#d9a65a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景装饰圆 -->
+  <circle cx="120" cy="100" r="80" fill="url(#welcome-grad)" opacity="0.5"/>
+  <circle cx="120" cy="100" r="60" fill="white" opacity="0.6"/>
+
+  <!-- DNA双螺旋（抽象化） -->
+  <g transform="translate(120, 85)">
+    <path d="M-30 -20 Q-15 -10, 0 -20 Q15 -30, 30 -20" stroke="url(#welcome-accent)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M-30 0 Q-15 10, 0 0 Q15 -10, 30 0" stroke="url(#welcome-accent)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M-30 20 Q-15 30, 0 20 Q15 10, 30 20" stroke="url(#welcome-accent)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+    <!-- 碱基对连接 -->
+    <line x1="-22" y1="-16" x2="-22" y2="-4" stroke="#b3d1ba" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-8" y1="-18" x2="-8" y2="-2" stroke="#b3d1ba" stroke-width="1.5" opacity="0.5"/>
+    <line x1="8" y1="-18" x2="8" y2="-2" stroke="#b3d1ba" stroke-width="1.5" opacity="0.5"/>
+    <line x1="22" y1="-16" x2="22" y2="-4" stroke="#b3d1ba" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- 欢迎气泡 -->
+  <g transform="translate(120, 50)">
+    <rect x="-40" y="-15" width="80" height="30" rx="15" fill="white" stroke="url(#welcome-accent)" stroke-width="1.5" opacity="0.9"/>
+    <text x="0" y="4" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#346845" text-anchor="middle">Welcome</text>
+    <!-- 气泡小三角 -->
+    <polygon points="0,15 -6,24 6,24" fill="white" stroke="url(#welcome-accent)" stroke-width="1.5"/>
+  </g>
+
+  <!-- 光标/输入指示 -->
+  <g transform="translate(120, 145)">
+    <rect x="-25" y="0" width="50" height="8" rx="4" fill="url(#welcome-glow)" opacity="0.6"/>
+    <rect x="-20" y="2" width="20" height="4" rx="2" fill="white" opacity="0.8"/>
+    <!-- 闪烁光标 -->
+    <rect x="5" y="1" width="2" height="6" rx="1" fill="#427f54" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 装饰小点 -->
+  <circle cx="60" cy="70" r="3" fill="#d9a65a" opacity="0.4"/>
+  <circle cx="180" cy="60" r="2" fill="#85b692" opacity="0.5"/>
+  <circle cx="70" cy="140" r="2.5" fill="#b3d1ba" opacity="0.6"/>
+  <circle cx="170" cy="150" r="3" fill="#e8c996" opacity="0.4"/>
+</svg>

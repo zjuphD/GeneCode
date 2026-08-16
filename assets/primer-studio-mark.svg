@@ -1,0 +1,25 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Primer Design Studio mark">
+  <defs>
+    <linearGradient id="mark-bg" x1="48" y1="28" x2="212" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="0.48" stop-color="#126DFF"/>
+      <stop offset="1" stop-color="#13B981"/>
+    </linearGradient>
+    <linearGradient id="helix" x1="78" y1="58" x2="184" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8F7FF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="20" y="18" width="216" height="224" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#0B3867" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+  <rect x="34" y="28" width="188" height="200" rx="52" fill="url(#mark-bg)" filter="url(#soft-shadow)"/>
+  <path d="M74 72C118 72 138 184 182 184" stroke="url(#helix)" stroke-width="15" stroke-linecap="round"/>
+  <path d="M182 72C138 72 118 184 74 184" stroke="url(#helix)" stroke-width="15" stroke-linecap="round" opacity="0.74"/>
+  <path d="M89 91H167M101 120H155M101 150H155M89 179H167" stroke="#F8FDFF" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="82" cy="72" r="10" fill="#E8FFF7"/>
+  <circle cx="174" cy="72" r="10" fill="#E8FFF7" opacity="0.82"/>
+  <circle cx="82" cy="184" r="10" fill="#E8FFF7" opacity="0.82"/>
+  <circle cx="174" cy="184" r="10" fill="#E8FFF7"/>
+  <circle cx="128" cy="128" r="24" fill="#06264D" fill-opacity="0.18" stroke="#F8FDFF" stroke-width="5"/>
+</svg>

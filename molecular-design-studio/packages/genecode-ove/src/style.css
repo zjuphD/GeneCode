@@ -1,0 +1,109 @@
+@font-face {
+  font-family: "Menlo";
+  src: url("./Menlo.ttf");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Monaco";
+  src: url("./Monaco.ttf");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+.ve-monospace-font {
+  font-family: Menlo, Monaco, monospace;
+  font-size: 10px;
+}
+.rowViewTextContainer text::selection {
+  background: transparent;
+}
+.translationLayer text,
+.tg-prime-direction,
+.sequenceNameText,
+.veAxis text {
+  user-select: none;
+}
+.ve-sequence-reverse {
+  fill: #b0b0b0;
+}
+
+.veCircularView .ve-monospace-font {
+  font-size: 14px;
+}
+
+.vespacer {
+  height: 15px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.openVeContextMenu .bp3-key {
+  box-shadow: none;
+  margin: 0px !important;
+  padding: 0px !important;
+  height: 11px;
+  line-height: 7px;
+  background: none;
+}
+
+.openVeContextMenu .bp3-icon-standard {
+  font-size: 10px;
+  height: 10px;
+}
+
+.veCutsiteLabel {
+  /* A-UI-001: match the Sequence panel — enzyme labels are upright and
+     bold-ish, not red italic, so the two views share one label language. */
+  font-style: normal;
+  font-weight: 600;
+  user-select: none;
+}
+
+.veCutsiteLabel:hover {
+  font-weight: bold;
+}
+
+/* .disable-hover .veRowItem {
+  pointer-events: none !important;
+} */
+
+.veWhiteBackground {
+  background: white;
+}
+
+.tg-min-width-dialog {
+  min-width: 300px;
+}
+
+/* this is necessary to allow the editor and its portals to sit at the top of the z-index stack for jbei
+   A-ENG-001: legacy `blueprintPortalClassName` context (childContextTypes) removed; Blueprint v3
+   portals all carry `.bp3-portal`, so the z-index rule now targets that class directly. */
+
+.bp3-portal {
+  z-index: 100000;
+}
+body.tg-no-scroll-body {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.veToolbar {
+  padding-top: 3px;
+}
+.veToolbar-outer {
+  padding-bottom: 1px;
+  background: #ebf1f5;
+}
+.bp3-dark .veToolbar-outer {
+  background: #202b33;
+}
+/* .veVersionHistoryView {
+  background: #ebf1f5;
+}
+.bp3-dark .veVersionHistoryView {
+  background: #202b33;
+} */

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <!-- 放大镜 - 大尺寸 -->
+  <circle cx="16" cy="16" r="9" stroke="#22c55e" stroke-width="4" fill="none"/>
+  <line x1="22.5" y1="22.5" x2="28" y2="28" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- 图表柱 - 简洁 -->
+  <rect x="24" y="26" width="5" height="10" rx="2.5" fill="#f59e0b"/>
+  <rect x="30" y="22" width="5" height="14" rx="2.5" fill="#22c55e"/>
+  <rect x="36" y="18" width="5" height="18" rx="2.5" fill="#22c55e"/>
+</svg>

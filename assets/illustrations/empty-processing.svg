@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none">
+  <defs>
+    <linearGradient id="process-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3f7f4"/>
+      <stop offset="100%" stop-color="#e3e7e3"/>
+    </linearGradient>
+    <linearGradient id="process-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#85b692"/>
+      <stop offset="100%" stop-color="#5e9a6f"/>
+    </linearGradient>
+    <linearGradient id="process-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c996"/>
+      <stop offset="100%" stop-color="#d9a65a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景装饰 -->
+  <circle cx="120" cy="100" r="80" fill="url(#process-grad)" opacity="0.5"/>
+  <circle cx="120" cy="100" r="60" fill="white" opacity="0.6"/>
+
+  <!-- 旋转的 DNA 环（处理中） -->
+  <g transform="translate(120, 90)">
+    <!-- 外环 -->
+    <circle cx="0" cy="0" r="30" stroke="url(#process-accent)" stroke-width="2.5" fill="none" opacity="0.6" stroke-dasharray="8 6">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 内环（反向旋转） -->
+    <circle cx="0" cy="0" r="20" stroke="url(#process-glow)" stroke-width="2" fill="none" opacity="0.5" stroke-dasharray="6 8">
+      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 中心点 -->
+    <circle cx="0" cy="0" r="6" fill="url(#process-accent)" opacity="0.8">
+      <animate attributeName="r" values="6;8;6" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="0" r="3" fill="white"/>
+  </g>
+
+  <!-- 进度条 -->
+  <g transform="translate(120, 155)">
+    <rect x="-40" y="0" width="80" height="6" rx="3" fill="#eae9e6" opacity="0.8"/>
+    <rect x="-40" y="0" width="50" height="6" rx="3" fill="url(#process-accent)" opacity="0.8">
+      <animate attributeName="width" values="0;50;80;50;0" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 数据流动示意 -->
+  <g transform="translate(120, 50)">
+    <rect x="-15" y="-3" width="8" height="6" rx="3" fill="#85b692" opacity="0.6">
+      <animate attributeName="x" values="-15;15;-15" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-15" y="-3" width="8" height="6" rx="3" fill="#d9a65a" opacity="0.5">
+      <animate attributeName="x" values="15;-15;15" dur="2.5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 装饰小点 -->
+  <circle cx="60" cy="70" r="3" fill="#d9a65a" opacity="0.4"/>
+  <circle cx="180" cy="60" r="2" fill="#85b692" opacity="0.5"/>
+  <circle cx="70" cy="140" r="2.5" fill="#b3d1ba" opacity="0.6"/>
+  <circle cx="170" cy="150" r="3" fill="#e8c996" opacity="0.4"/>
+</svg>
