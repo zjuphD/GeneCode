@@ -1,11 +1,49 @@
 # GeneCode
 
-GeneCode is a local-first molecular sequence and cloning workbench with an
-integrated Agent. It combines a React + Tauri desktop interface, the vendored
-GeneCode OVE sequence editor, and a Python sidecar for deterministic biology
-tools and optional model-assisted task routing.
+> An Agent-assisted molecular sequence and cloning workbench that keeps the
+> sequence canvas, deterministic biology tools, and execution history in one
+> auditable workspace.
 
-![CI](https://github.com/zjuphD/GeneCode/actions/workflows/ci.yml/badge.svg)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Open_GeneCode-6f56d9)](https://genecode-agent.pages.dev/)
+[![CI](https://github.com/zjuphD/GeneCode/actions/workflows/ci.yml/badge.svg)](https://github.com/zjuphD/GeneCode/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/zjuphD/GeneCode?style=flat)](https://github.com/zjuphD/GeneCode/stargazers)
+[![Tauri + React](https://img.shields.io/badge/Desktop-Tauri_%2B_React-2472a4)](https://tauri.app/)
+
+**[Open the live demo](https://genecode-agent.pages.dev/)** ·
+[Report an issue](https://github.com/zjuphD/GeneCode/issues)
+
+<p align="center">
+  <a href="https://genecode-agent.pages.dev/">
+    <img src="docs/assets/genecode-agent-preview.png" alt="GeneCode sequence editor with the integrated molecular-design Agent" width="100%">
+  </a>
+</p>
+
+<p align="center"><sub>Public browser demo: sequence map, cloning tools, and the integrated GeneCode Agent.</sub></p>
+
+## Why GeneCode
+
+Molecular-design work often gets split across a sequence editor, standalone
+calculators, and a general chat window. GeneCode keeps those steps connected:
+the Agent can work from the open sequence and selected region while the
+deterministic biology layer remains the source of truth.
+
+| | GeneCode | Standalone editor + general chat |
+|---|---|---|
+| Sequence context | Open document and selected region stay in context | Repeated manual copy and paste |
+| Biology tools | Deterministic cloning and assay calculations | Results depend on disconnected tools |
+| Traceability | Visible execution steps, history, and reviewable changes | Reasoning and edits are scattered |
+| Deployment | Local-first desktop app plus a browser demo | Usually one environment or the other |
+
+## Quick Start
+
+```bash
+git clone https://github.com/zjuphD/GeneCode.git
+cd GeneCode/molecular-design-studio && npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:1420` to explore the frontend. For the full local Agent
+service or desktop build, continue with the development sections below.
 
 ## Highlights
 
