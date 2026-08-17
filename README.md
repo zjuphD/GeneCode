@@ -14,11 +14,11 @@
 
 <p align="center">
   <a href="https://genecode-agent.pages.dev/">
-    <img src="docs/assets/genecode-agent-preview.png" alt="GeneCode sequence editor with the integrated molecular-design Agent" width="100%">
+    <img src="docs/assets/genecode-agent-workflow-preview.gif" alt="GeneCode live workflow: submit a task, let the Agent read the active sequence, then inspect completed tool steps" width="100%">
   </a>
 </p>
 
-<p align="center"><sub>Public browser demo: sequence map, cloning tools, and the integrated GeneCode Agent.</sub></p>
+<p align="center"><sub>Live workflow: submit a sequence-analysis task → Agent reads the active sequence → completed tool steps remain visible.</sub></p>
 
 ## Why GeneCode
 
