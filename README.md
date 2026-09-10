@@ -1,4 +1,6 @@
-# GeneCode
+# genecode：分子生物学智能体
+
+**English** | [简体中文](README.zh-CN.md)
 
 > An Agent-assisted molecular sequence and cloning workbench that keeps the
 > sequence canvas, deterministic biology tools, and execution history in one
