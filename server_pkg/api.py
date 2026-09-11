@@ -11,13 +11,14 @@ import json
 import os
 from functools import partial
 import secrets
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from .schemas import ApiError
 from .config import ALLOWED_HOST_NAMES, API_CAPABILITIES, API_TOKEN_HEADER, API_VERSION, BASE_DIR, MAX_REQUEST_BODY_BYTES, TRUSTED_WEB_ORIGINS, begin_remote_diagnostics, clear_remote_diagnostics, generate_api_token, is_sensitive_static_path, merge_remote_diagnostics, summarize_remote_diagnostics
 from .bio import design_cloning_response, design_mutagenesis_response, design_rt_batch_response, design_rt_response, design_sgrna_response, design_sirna_response, export_sequence_response, parse_sequence_response, resolve_rt_target_response, resolve_sgrna_target_response, resolve_sirna_target_response, scan_restriction_sites_response
 from .providers import agent_llm_config, agent_llm_public_status, set_agent_llm_model_response, test_agent_llm_connection_response
-from .agent import _cancel_run, _inject_sse_metadata, agent_chat_response, agent_confirm_response, agent_execute_response, agent_execute_sse_generator, check_rt_specificity_response, check_sgrna_offtarget_response, check_sirna_offtarget_response, incoming_agent_run_id
+from .agent import _cancel_run, _inject_sse_metadata, _run_journal, agent_chat_response, agent_confirm_response, agent_execute_response, agent_execute_sse_generator, check_rt_specificity_response, check_sgrna_offtarget_response, check_sirna_offtarget_response, incoming_agent_run_id
+from .mcp_gateway import MCP_MAX_REQUEST_BYTES, handle_mcp_jsonrpc
 
 class AppHandler(SimpleHTTPRequestHandler):
     # A-API-001: set by main() at startup (or left empty to disable
@@ -137,6 +138,7 @@ class AppHandler(SimpleHTTPRequestHandler):
         """
         if self._reject_if_untrusted_host():
             return True
+        journal_route = path == "/api/agent/runs" or path.startswith("/api/agent/runs/")
         if path.startswith("/api/") and path != "/api/health":
             if not self._token_presented():
                 self.write_json(
@@ -144,8 +146,9 @@ class AppHandler(SimpleHTTPRequestHandler):
                     {"ok": False, "error": "Missing or invalid API token."},
                 )
                 return True
-            self.write_json(HTTPStatus.NOT_FOUND, {"error": "Unknown API route"})
-            return True
+            if not journal_route:
+                self.write_json(HTTPStatus.NOT_FOUND, {"error": "Unknown API route"})
+                return True
         if is_sensitive_static_path(path):
             self.write_json(HTTPStatus.FORBIDDEN, {"ok": False, "error": "Forbidden."})
             return True
@@ -163,6 +166,46 @@ class AppHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/health":
             self.write_json(HTTPStatus.OK, self._health_payload())
+            return
+        if path == "/api/agent/runs":
+            query = parse_qs(urlparse(self.path).query)
+            raw_limit = query.get("limit", ["50"])[0]
+            try:
+                limit = int(raw_limit)
+            except (TypeError, ValueError):
+                limit = 50
+            self.write_json(HTTPStatus.OK, {"ok": True, "runs": _run_journal.list_runs(limit)})
+            return
+        if path.startswith("/api/agent/runs/"):
+            parts = path.strip("/").split("/")
+            if len(parts) == 4:
+                run_id = parts[3]
+                record = _run_journal.load_run(run_id)
+                if record is None:
+                    self.write_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Run not found."})
+                else:
+                    self.write_json(HTTPStatus.OK, {"ok": True, "run": record})
+                return
+            if len(parts) == 6 and parts[4] == "artifacts":
+                query = parse_qs(urlparse(self.path).query)
+                preview = query.get("preview", ["0"])[0] in {"1", "true", "yes"}
+                raw_max_bytes = query.get("maxBytes", ["32768" if preview else "2000000"])[0]
+                try:
+                    max_bytes = int(raw_max_bytes)
+                except (TypeError, ValueError):
+                    max_bytes = 2_000_000
+                artifact = _run_journal.get_artifact(
+                    parts[3],
+                    parts[5],
+                    include_data=True,
+                    max_bytes=max_bytes,
+                )
+                if artifact is None:
+                    self.write_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Artifact not found."})
+                else:
+                    self.write_json(HTTPStatus.OK, {"ok": True, "artifact": artifact})
+                return
+            self.write_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Unknown run route."})
             return
         super().do_GET()
 
@@ -241,6 +284,7 @@ class AppHandler(SimpleHTTPRequestHandler):
             "/api/parse/sequence",
             "/api/export/sequence",
             "/api/scan/restriction-sites",
+            "/api/mcp",
         }:
             self.write_json(HTTPStatus.NOT_FOUND, {"error": "Unknown API route"})
             return
@@ -249,6 +293,30 @@ class AppHandler(SimpleHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         if length > MAX_REQUEST_BODY_BYTES:
             self.write_json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"ok": False, "error": f"请求体过大（{length} bytes），上限 {MAX_REQUEST_BODY_BYTES // (1024*1024)} MB。"})
+            return
+
+        # Narrow MCP-compatible JSON-RPC route.  It is intentionally handled
+        # before the design/Agent routes so MCP cannot accidentally fall
+        # through to a write-capable endpoint.  Host/origin/token guards above
+        # remain mandatory for this local integration point.
+        if route == "/api/mcp":
+            if length > MCP_MAX_REQUEST_BYTES:
+                self.write_json(
+                    HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                    {"ok": False, "error": f"MCP 请求体过大，上限 {MCP_MAX_REQUEST_BYTES // 1024} KB。"},
+                )
+                return
+            try:
+                message = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+            except json.JSONDecodeError:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "MCP 请求体不是合法 JSON。"})
+                return
+            response = handle_mcp_jsonrpc(message)
+            if response is None:
+                self.send_response(HTTPStatus.NO_CONTENT)
+                self.end_headers()
+            else:
+                self.write_json(HTTPStatus.OK, response)
             return
 
         # A-AGT-003: server-side task cancellation.  The client sends the same

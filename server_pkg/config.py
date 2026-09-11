@@ -44,7 +44,7 @@ DATA_DIR = Path(os.environ.get("PRIMER_DATA_DIR") or BASE_DIR).expanduser().reso
 # token is empty, enforcement is disabled (tests and legacy ad-hoc launches).
 API_TOKEN_HEADER = "X-GeneCode-Token"
 API_VERSION = "1.0.0"
-API_CAPABILITIES = ["health-nonce", "bearer-token", "sse-agent-stream"]
+API_CAPABILITIES = ["health-nonce", "bearer-token", "sse-agent-stream", "run-journal", "artifact-store", "mcp-readonly"]
 def generate_api_token() -> str:
     """256-bit hex bearer token (64 hex chars)."""
     return secrets.token_hex(32)

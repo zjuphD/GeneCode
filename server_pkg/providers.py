@@ -424,7 +424,9 @@ def _agent_llm_completion_inner(
         # The child receives the already serialized request body. Keeping this
         # as a string preserves the exact JSON bytes that were signed/sent by
         # urllib; the child script intentionally calls ``encode`` on it.
-        {"body": body.decode("utf-8"), "headers": agent_llm_request_headers(config)},
+        {"body": body.decode("utf-8"), "headers": agent_llm_request_headers(config),
+         "cafile": str(certifi.where()) if certifi is not None else None,
+         "timeout": AGENT_LLM_TIMEOUT},
         ensure_ascii=False,
     ).encode("utf-8")
     # A-AGT-003: the model call is cancellable.  ``subprocess.run`` would block
@@ -433,8 +435,13 @@ def _agent_llm_completion_inner(
     # the child is killed and the call aborts instead of burning quota.
     if run_id and _is_run_cancelled(run_id):
         raise ApiError("任务已被取消。")
+    worker_argv = (
+        [sys.executable, "--llm-http-worker", str(config["endpoint"])]
+        if getattr(sys, "frozen", False)
+        else [sys.executable, "-c", child_script, str(config["endpoint"])]
+    )
     proc = subprocess.Popen(
-        [sys.executable, "-c", child_script, str(config["endpoint"])],
+        worker_argv,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

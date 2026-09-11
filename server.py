@@ -17,6 +17,14 @@ Section map (original line ranges -> module):
 """
 from __future__ import annotations
 
+# PyInstaller executables cannot interpret `-c`. Dispatch before importing
+# the server/config modules so workers never start another server or cache.
+import sys
+if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "--llm-http-worker":
+    from server_pkg.llm_worker import main as worker_main
+    worker_main()
+    raise SystemExit(0)
+
 from server_pkg.schemas import *  # noqa: F401,F403
 from server_pkg.schemas import _to_zbho  # noqa: F401
 
