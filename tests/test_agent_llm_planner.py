@@ -500,11 +500,12 @@ class TestDesignAgentExecuteStreamDualTrack(unittest.TestCase):
         self.assertTrue(final["meta"]["planErrors"])
 
     def test_falls_back_to_rules_when_plan_uses_non_executable_tool(self) -> None:
-        # Non-executable shared tools (sequence_stats) pass registry validation
-        # but are not in LLM_PLAN_EXECUTABLE_TOOLS — must fall back to rules.
+        # ``agent_confirm`` passes registry validation (it belongs to the
+        # confirmation flow) but is not in LLM_PLAN_EXECUTABLE_TOOLS and is
+        # hidden from the planner registry — such a plan must fall back to rules.
         shared_plan = valid_rt_plan()
-        shared_plan["steps"][0]["tool"] = "sequence_stats"
-        shared_plan["steps"][0]["args"] = {"sequence": "ATGC" * 40}
+        shared_plan["steps"][0]["tool"] = "agent_confirm"
+        shared_plan["steps"][0]["args"] = {"confirmations": "rt-transcript"}
         shared_plan["steps"][0]["dependsOn"] = []
         with patch.object(server, "agent_llm_config", return_value=_fake_llm_config()), \
              patch.object(server, "agent_llm_json_completion", return_value=shared_plan), \

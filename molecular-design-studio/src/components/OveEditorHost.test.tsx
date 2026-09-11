@@ -417,7 +417,23 @@ describe("OveEditorHost", () => {
     );
 
     expect(screen.queryByLabelText("选区操作")).toBeNull();
+    expect(screen.getByLabelText("序列操作提示").classList.contains("ove-selection-actions")).toBe(true);
+    expect(screen.getByText("拖选序列以添加特征或引物，双击特征进行编辑")).toBeDefined();
     expect(screen.queryByText(/选区 GC/)).toBeNull();
+  });
+
+  it("opens the adjacent inspector from selection actions", () => {
+    const onOpenPanel = vi.fn();
+    render(<OveEditorHost
+      doc={makeDoc()}
+      oveData={makeOveData()}
+      selection={{ start: 1, end: 3, length: 2, wrapsOrigin: false, sequence: "CG" }}
+      onSaved={vi.fn()}
+      onSaveError={vi.fn()}
+      onOpenPanel={onOpenPanel}
+    />);
+    fireEvent.click(screen.getByRole("button", { name: "检查选区" }));
+    expect(onOpenPanel).toHaveBeenCalledWith("inspector");
   });
 
   it("reports GC content for the selected sequence instead of the full document", () => {
@@ -519,7 +535,9 @@ describe("OveEditorHost", () => {
       />,
     );
     const props = mockCreateVectorEditor.mock.calls[0]![1] as Record<string, unknown>;
-    const toolbarProps = props.ToolBarProps as { toolList: string[] };
+    const toolbarProps = props.ToolBarProps as { toolList: string[]; portalTarget: HTMLElement };
+    expect(toolbarProps.portalTarget).toBe(screen.getByRole("group", { name: "画布工具" }));
+    expect(screen.getByRole("toolbar", { name: "编辑器视图" }).contains(toolbarProps.portalTarget)).toBe(true);
     expect(toolbarProps.toolList).toEqual([
       "cutsiteTool",
       "featureTool",
@@ -1107,7 +1125,7 @@ describe("OveEditorHost", () => {
     fireEvent.click(screen.getByRole("button", { name: "克隆" }));
 
     expect(screen.getByText("克隆到载体")).toBeDefined();
-    expect(screen.getByText(/Vector “test”/)).toBeDefined();
+    expect(screen.getByText(/载体 test/)).toBeDefined();
 
     // Close via the header button
     fireEvent.click(screen.getByRole("button", { name: "关闭克隆对话框" }));

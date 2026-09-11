@@ -15,6 +15,12 @@ function emptyGraph() {
 }
 
 describe("AgentStepFlow", () => {
+  it("expands failed tool records without hiding the failure state", () => {
+    const { getByRole } = render(<AgentStepFlow graph={emptyGraph()} phase="idle" validationStatus="idle" runLog={[]} timeline={[]} isBusy={false} hasCompletedResult={false} error="Service unavailable" />);
+    const flow = getByRole("region", { name: "任务流程" });
+    expect(flow.querySelector("details")?.open).toBe(true);
+    expect(within(flow).getByText("执行失败")).toBeDefined();
+  });
   it("shows the chat-like thinking and waiting state before the first event", () => {
     const { getByRole, getByText } = render(
       <AgentStepFlow
@@ -29,10 +35,11 @@ describe("AgentStepFlow", () => {
       />,
     );
 
-    const flow = getByRole("region", { name: "Step flow" });
+    const flow = getByRole("region", { name: "任务流程" });
     expect(within(flow).getByText("处理中…")).toBeDefined();
     expect(within(flow).getByText("等待 Agent 事件")).toBeDefined();
-    expect(within(flow).getByText("思考中···")).toBeDefined();
+    expect(flow.querySelector('.agent-step-flow__thought[role="status"]')?.textContent).toContain("正在读取序列上下文");
+    expect(flow.querySelector("details")?.open).toBe(false);
     expect(getByText("正在读取序列上下文，整理目标并生成可执行计划。")).toBeDefined();
   });
 
@@ -58,11 +65,11 @@ describe("AgentStepFlow", () => {
       />,
     );
 
-    const flow = getByRole("region", { name: "Step flow" });
+    const flow = getByRole("region", { name: "任务流程" });
     const events = flow.querySelector(".agent-step-flow__events") as HTMLElement;
-    expect(within(events).getByText("read_open_sequence")).toBeDefined();
+    expect(within(events).getByText("读取当前序列")).toBeDefined();
     expect(within(events).getByText("正在读取")).toBeDefined();
-    expect(events.textContent).not.toContain("读取序列");
+    expect(events.textContent).not.toContain("read_open_sequence");
   });
 
   it("keeps locate actions on streamed tool events", () => {
@@ -90,7 +97,7 @@ describe("AgentStepFlow", () => {
       />,
     );
 
-    const flow = getByRole("region", { name: "Step flow" });
+    const flow = getByRole("region", { name: "任务流程" });
     const tool = flow.querySelector(".agent-step-flow__events [data-step-id=\"tool-0\"]");
     expect(tool?.tagName).toBe("BUTTON");
     fireEvent.click(tool as Element);

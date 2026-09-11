@@ -27,7 +27,7 @@ function makeSelection(): SequenceSelection {
 function renderWizard(overrides: { onCreate?: Mock<(doc: SequenceDocument) => void> } = {}) {
   const onCreate: Mock<(doc: SequenceDocument) => void> = overrides.onCreate ?? vi.fn();
   const onCancel = vi.fn();
-  render(
+  const view = render(
     <CloningWizardDialog
       vector={makeVector()}
       selection={makeSelection()}
@@ -35,14 +35,14 @@ function renderWizard(overrides: { onCreate?: Mock<(doc: SequenceDocument) => vo
       onCancel={onCancel}
     />,
   );
-  return { onCreate, onCancel };
+  return { onCreate, onCancel, unmount: view.unmount };
 }
 
 describe("CloningWizardDialog", () => {
   it("defaults to the selection as the insert source", () => {
     renderWizard();
     expect(screen.getByText("克隆到载体")).toBeDefined();
-    expect(screen.getByText(/Vector “pVector”/)).toBeDefined();
+    expect(screen.getByText(/载体 pVector/)).toBeDefined();
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("6 bp")).toBeDefined();
   });
@@ -89,7 +89,9 @@ describe("CloningWizardDialog", () => {
     fireEvent.click(screen.getByLabelText("粘贴序列"));
     const create = screen.getByText("创建构建体") as HTMLButtonElement;
     expect(create.disabled).toBe(true);
-    expect(screen.getByText("Add an insert sequence to assemble.")).toBeDefined();
+    expect(screen.getByText("添加插入片段")).toBeDefined();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByText("建议")).toBeNull();
   });
 
   it("closes on Escape and returns focus to the trigger (A-A11Y-001)", () => {
@@ -97,11 +99,17 @@ describe("CloningWizardDialog", () => {
     trigger.textContent = "Clone";
     document.body.appendChild(trigger);
     trigger.focus();
-    const { onCancel } = renderWizard();
+    const { onCancel, unmount } = renderWizard();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "关闭克隆对话框" }));
+    const workspaceEscape = vi.fn();
+    window.addEventListener("keydown", workspaceEscape);
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(workspaceEscape).not.toHaveBeenCalled();
+    unmount();
     expect(document.activeElement).toBe(trigger);
+    window.removeEventListener("keydown", workspaceEscape);
     trigger.remove();
   });
 
@@ -109,5 +117,46 @@ describe("CloningWizardDialog", () => {
     renderWizard();
     const position = screen.getByLabelText(/插入位置/) as HTMLInputElement;
     expect(position.value).toBe("3"); // selection.start(2) + 1
+  });
+
+  it.each(["", "0", "18", "2.5"])("blocks invalid position %s without showing a misleading preview", (value) => {
+    const { onCreate } = renderWizard();
+    fireEvent.change(screen.getByLabelText(/插入位置/), { target: { value } });
+    expect(screen.getByLabelText(/插入位置/).getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText("检查插入位置")).toBeDefined();
+    const create = screen.getByRole("button", { name: "创建构建体" });
+    expect((create as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(create);
+    expect(onCreate).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/插入位置/), { target: { value: "17" } });
+    expect((create as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("blocks mismatching Gibson arms and recovers after correction", () => {
+    const { onCreate } = renderWizard();
+    fireEvent.change(screen.getByLabelText(/插入位置/), { target: { value: "9" } });
+    fireEvent.change(screen.getByLabelText(/左同源臂/), { target: { value: "AAAA" } });
+    const create = screen.getByRole("button", { name: "创建构建体" }) as HTMLButtonElement;
+    expect(create.disabled).toBe(true);
+    expect(screen.getByRole("alert").textContent).toContain("不匹配");
+    fireEvent.click(create);
+    expect(onCreate).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/左同源臂/), { target: { value: "CCCC" } });
+    expect(create.disabled).toBe(false);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("keeps keyboard navigation inside the dialog, including when creation is disabled", () => {
+    renderWizard();
+    const close = screen.getByRole("button", { name: "关闭克隆对话框" });
+    const create = screen.getByRole("button", { name: "创建构建体" });
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(create);
+    fireEvent.keyDown(create, { key: "Tab" });
+    expect(document.activeElement).toBe(close);
+    fireEvent.click(screen.getByLabelText("粘贴序列"));
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "取消" }));
   });
 });

@@ -303,6 +303,7 @@ function buildJunctionPreview(
   insertEnd: number,
   side: "left" | "right",
   overlap: string,
+  circular = false,
 ): string {
   const windowLength = 24;
   if (side === "left") {
@@ -310,7 +311,13 @@ function buildJunctionPreview(
     return construct.slice(start, insertStart + Math.min(overlap.length, 8));
   }
   const end = Math.min(construct.length, insertEnd + windowLength);
-  return construct.slice(Math.max(0, insertEnd - Math.min(overlap.length, 8)), end);
+  const downstreamLength = end - insertEnd;
+  // A circular Gibson construct ends with the insert in linear coordinates.
+  // Its right junction must also show the vector bases across the origin.
+  const wrapped = circular
+    ? construct.slice(0, Math.min(insertStart, windowLength - downstreamLength))
+    : "";
+  return construct.slice(Math.max(0, insertEnd - Math.min(overlap.length, 8)), end) + wrapped;
 }
 
 // ── Gibson ───────────────────────────────────────────────────
@@ -324,16 +331,27 @@ export function simulateGibson(
   const errors: string[] = [];
   const checks: AssemblyCheck[] = [];
   const insertSequence = normalize(insert.sequence);
+  if (!vector.sequence || !VALID_BASES.test(vector.sequence.toUpperCase())) {
+    errors.push("载体序列为空或包含不支持的字符。");
+  }
+  if (!Number.isInteger(insertAt) || insertAt < 0 || insertAt > vector.sequence.length) {
+    errors.push("插入位置必须是载体范围内的整数坐标。");
+  }
   if (!insertSequence) errors.push("Add an insert sequence to assemble.");
   if (!VALID_BASES.test(insertSequence)) {
     errors.push("The insert sequence contains unsupported characters.");
   }
 
   const layout = buildConstructLayout(vector, insertAt, insertSequence.length);
-  const vectorSequence = layout.vectorSequence;
+  const vectorSequence = layout.vectorSequence.toUpperCase();
   const insertStart = layout.insertStart;
   const leftArm = normalize(arms.leftArm ?? "");
   const rightArm = normalize(arms.rightArm ?? "");
+  for (const [label, raw, normalized] of [
+    ["左", arms.leftArm, leftArm], ["右", arms.rightArm, rightArm],
+  ]) {
+    if (raw?.trim() && !normalized) errors.push(`${label}同源臂未包含有效 DNA 碱基。`);
+  }
 
   // Auto arms match the vector bases adjacent to the insertion junction: the
   // sequence immediately before (left arm) and after (right arm) the cut. For
@@ -350,34 +368,41 @@ export function simulateGibson(
   const leftOverlap = leftArm || autoLeft;
   const rightOverlap = rightArm || autoRight;
 
-  const armChecks = (label: string, arm: string, auto: string) => {
-    const key = label.toLowerCase();
+  const armChecks = (side: "left" | "right", arm: string, custom: string) => {
+    const key = side;
+    const label = side === "left" ? "左" : "右";
     if (!arm) return;
+    if (!/^[ACGT]+$/.test(arm)) {
+      const detail = `${label}同源臂含有非 A/C/G/T 碱基，无法验证与载体的精确匹配。`;
+      checks.push({ key: `${key}-bases`, label: `${label}同源臂序列`, status: "failed", detail });
+      errors.push(detail);
+      return;
+    }
     if (arm.length < GIBSON_ARM_MIN) {
       checks.push({
         key: `${key}-short`,
-        label: `${label} homology arm too short`,
+        label: `${label}同源臂偏短`,
         status: "warning",
-        detail: `${arm.length} bp — at least ${GIBSON_ARM_MIN} bp is recommended for efficient recombination.`,
+        detail: `${arm.length} bp；当前模拟建议至少 ${GIBSON_ARM_MIN} bp，请结合实验条件复核。`,
       });
     } else if (arm.length < GIBSON_ARM_TARGET_MIN || arm.length > GIBSON_ARM_TARGET_MAX) {
       checks.push({
         key: `${key}-range`,
-        label: `${label} homology arm length`,
+        label: `${label}同源臂长度`,
         status: "warning",
-        detail: `${arm.length} bp — the recommended range is ${GIBSON_ARM_TARGET_MIN}–${GIBSON_ARM_TARGET_MAX} bp.`,
+        detail: `${arm.length} bp；当前模拟建议范围为 ${GIBSON_ARM_TARGET_MIN}–${GIBSON_ARM_TARGET_MAX} bp。`,
       });
     }
     const gc = gcPercent(arm);
     if (gc < 40 || gc > 60) {
       checks.push({
         key: `${key}-gc`,
-        label: `${label} homology arm GC content`,
+        label: `${label}同源臂 GC 含量`,
         status: "warning",
-        detail: `GC ${gc.toFixed(1)}% — outside the preferred 40–60% range.`,
+        detail: `GC ${gc.toFixed(1)}%，超出当前模拟建议的 40–60% 范围。`,
       });
     }
-    if (arm !== auto) {
+    if (custom) {
       const before = vectorSequence.slice(
         Math.max(0, insertStart - arm.length),
         insertStart,
@@ -385,19 +410,23 @@ export function simulateGibson(
       const after = vector.circular
         ? vectorSequence.slice(0, arm.length)
         : vectorSequence.slice(insertStart, insertStart + arm.length);
-      const matches = before === arm || after === arm;
+      // Matching the opposite end is not sufficient: it changes the proposed
+      // junction. Each custom arm must match its own side in top-strand order.
+      const matches = (side === "left" ? before : after) === arm;
+      const detail = matches
+        ? `${label}同源臂与插入位置${side === "left" ? "上游" : "下游"}的载体序列一致。`
+        : `${label}同源臂与对应载体末端不匹配，请修正序列或使用自动同源臂。`;
       checks.push({
         key: `${key}-match`,
-        label: `${label} homology arm matches vector end`,
-        status: matches ? "passed" : "warning",
-        detail: matches
-          ? "The arm matches the linearized vector end."
-          : "The arm does not exactly match the linearized vector end; assembly fidelity may be reduced.",
+        label: `${label}同源臂与载体末端匹配`,
+        status: matches ? "passed" : "failed",
+        detail,
       });
+      if (!matches) errors.push(detail);
     }
   };
-  armChecks("Left", leftOverlap, autoLeft);
-  armChecks("Right", rightOverlap, autoRight);
+  armChecks("left", leftOverlap, leftArm);
+  armChecks("right", rightOverlap, rightArm);
 
   if (errors.length) {
     return { ok: false, construct: null, junctions: [], checks, errors };
@@ -438,15 +467,15 @@ export function simulateGibson(
     junctions: [
       {
         side: "left",
-        label: "Vector → Insert",
+        label: "载体 → 插入片段",
         overlap: leftOverlap,
         assembledPreview: buildJunctionPreview(constructSequence, insertStart, insertStart + insertSequence.length, "left", leftOverlap),
       },
       {
         side: "right",
-        label: "Insert → Vector",
+        label: "插入片段 → 载体",
         overlap: rightOverlap,
-        assembledPreview: buildJunctionPreview(constructSequence, insertStart, insertStart + insertSequence.length, "right", rightOverlap),
+        assembledPreview: buildJunctionPreview(constructSequence, insertStart, insertStart + insertSequence.length, "right", rightOverlap, vector.circular),
       },
     ],
     checks,

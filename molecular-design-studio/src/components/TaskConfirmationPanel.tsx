@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, ChevronDown } from "lucide-react";
 import type { TaskConfirmation, TaskConfirmationItem } from "../agent/responseTypes";
 
 interface TaskConfirmationPanelProps {
@@ -88,7 +88,6 @@ function WarningCard({ item }: { item: TaskConfirmationItem }) {
 function AssumptionCard({ item }: { item: TaskConfirmationItem }) {
   return (
     <div className="task-confirmation__assumption">
-      <Info className="task-confirmation__icon" aria-hidden="true" />
       <span>{item.label}</span>
     </div>
   );
@@ -199,7 +198,7 @@ export function TaskConfirmationPanel({ confirmation, onSubmit }: TaskConfirmati
             disabled={filledCount === 0}
           >
             {filledCount > 0
-              ? `已填 ${filledCount} 项`
+              ? `提交参数（${filledCount} 项）`
               : "补全必填输入"}
           </button>
         </div>
@@ -208,10 +207,12 @@ export function TaskConfirmationPanel({ confirmation, onSubmit }: TaskConfirmati
       {/* Assumptions — informational */}
       {confirmation.assumptions.length > 0 && (
         <div className="task-confirmation__section">
-          <div className="task-confirmation__section-title">假设</div>
+          <details className="agent-disclosure">
+          <summary>采用的假设<span>{confirmation.assumptions.length} 项</span><ChevronDown aria-hidden="true" /></summary>
           {confirmation.assumptions.map((item, i) => (
             <AssumptionCard key={item.key || i} item={item} />
           ))}
+          </details>
         </div>
       )}
 

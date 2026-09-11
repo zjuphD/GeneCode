@@ -63,7 +63,13 @@ describe("simulateGibson", () => {
     expect(right?.overlap).toBe("GGGGCCCCAAAATTTT"); // first 20 → whole 16 bp linear
   });
 
-  it("warns when a user arm does not match the vector end", () => {
+  it("shows the vector across the origin in the circular right-junction preview", () => {
+    const result = simulateGibson(makeVector("GGGGCCCCAAAATTTT", true), makeInsert("ACGTACGT"), 4);
+    expect(result.junctions.find((j) => j.side === "right")?.assembledPreview)
+      .toBe("ACGTACGTCCCCAAAATTTTGGGG");
+  });
+
+  it("blocks creation when a user arm does not match its vector end", () => {
     const vector = makeVector("GGGGCCCCAAAATTTT", false);
     const insert = makeInsert("ACGT");
     const result = simulateGibson(vector, insert, 0, {
@@ -71,8 +77,47 @@ describe("simulateGibson", () => {
       rightArm: "GGGG",
     });
     const match = result.checks.find((check) => check.key === "left-match");
-    expect(match?.status).toBe("warning");
-    expect(result.construct?.sequence).toBe("ACGTGGGGCCCCAAAATTTT");
+    expect(match?.status).toBe("failed");
+    expect(result.ok).toBe(false);
+    expect(result.construct).toBeNull();
+    expect(result.junctions).toEqual([]);
+  });
+
+  it.each([false, true])("accepts the correct left/right arms (circular=%s)", (circular) => {
+    const vector = makeVector("GGGGCCCCAAAATTTT", circular);
+    const result = simulateGibson(vector, makeInsert("ACGT"), 8, { leftArm: "CCCC", rightArm: "AAAA" });
+    expect(result.ok).toBe(true);
+    expect(result.checks.filter((c) => c.key.endsWith("-match")).map((c) => c.status)).toEqual(["passed", "passed"]);
+  });
+
+  it.each([false, true])("rejects arms swapped to the opposite ends (circular=%s)", (circular) => {
+    const result = simulateGibson(makeVector("GGGGCCCCAAAATTTT", circular), makeInsert("ACGT"), 8, {
+      leftArm: "AAAA", rightArm: "CCCC",
+    });
+    expect(result.ok).toBe(false);
+    expect(result.construct).toBeNull();
+    expect(result.checks.filter((c) => c.key.endsWith("-match")).map((c) => c.status)).toEqual(["failed", "failed"]);
+  });
+
+  it.each(["ACNT", "ACXT", "123"]) ("blocks unverified custom arm %s", (leftArm) => {
+    const result = simulateGibson(makeVector(), makeInsert(), 8, { leftArm });
+    expect(result.ok).toBe(false);
+    expect(result.construct).toBeNull();
+  });
+
+  it.each([-1, 17, 1.5, NaN, Infinity])("rejects invalid coordinates instead of silently clamping %s", (position) => {
+    const result = simulateGibson(makeVector("GGGGCCCCAAAATTTT"), makeInsert(), position);
+    expect(result.ok).toBe(false);
+    expect(result.construct).toBeNull();
+    expect(result.errors).toContain("插入位置必须是载体范围内的整数坐标。");
+  });
+
+  it("normalizes lowercase vector and formatted custom arms", () => {
+    const result = simulateGibson(makeVector("ggggccccaaaatttt", false), makeInsert("ACGT"), 8, {
+      leftArm: "1 cc cc", rightArm: "aaaa",
+    });
+    expect(result.ok).toBe(true);
+    expect(result.construct?.sequence).toBe("GGGGCCCCACGTAAAATTTT");
   });
 
   it("offsets insert features and flags a constructed insert region", () => {

@@ -1,11 +1,11 @@
 import { connectToEditor } from "../withEditorProps";
 // import download from 'in-browser-download'
 import {
-  Icon as BpIcon,
   AnchorButton,
   Intent
 } from "@blueprintjs/core";
 import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import "./style.css";
 import { noop } from "lodash-es";
 
@@ -62,6 +62,8 @@ class ToolbarItem extends React.Component {
 
   handleDocumentKeyDown = event => {
     if (this.props.isOpen && event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
       this.toggleDropdown({ forceClose: true });
     }
   };
@@ -166,16 +168,16 @@ class ToolbarItem extends React.Component {
                 <div>{dropdownicon}</div>
               </div>
             ) : isOpen ? (
-              <BpIcon
+              <ChevronUp
                 data-test={toolName + "Dropdown"}
-                iconSize={13}
-                icon="caret-up"
+                size={13}
+                aria-hidden="true"
               />
             ) : (
-              <BpIcon
+              <ChevronDown
                 data-test={toolName + "Dropdown"}
-                iconSize={13}
-                icon="caret-down"
+                size={13}
+                aria-hidden="true"
               />
             )}
           </div>

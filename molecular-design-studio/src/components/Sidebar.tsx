@@ -6,16 +6,7 @@
  */
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import FileText from "@mui/icons-material/DescriptionRounded";
-import FolderOpen from "@mui/icons-material/FolderOpenRounded";
-import History from "@mui/icons-material/HistoryRounded";
-import Info from "@mui/icons-material/InfoOutlined";
-import List from "@mui/icons-material/ListAltRounded";
-import Pencil from "@mui/icons-material/EditRounded";
-import Plus from "@mui/icons-material/AddRounded";
-import Save from "@mui/icons-material/SaveRounded";
-import Search from "@mui/icons-material/SearchRounded";
-import Trash2 from "@mui/icons-material/DeleteOutlineRounded";
+import { FileText, FolderOpen, History, Info, List, Pencil, Plus, Save, Search, Trash2 } from "lucide-react";
 import type { SequenceDocument, SequenceFeature, SequenceSelection } from "../types";
 import type { ProjectEntry } from "../workspace/projectPersistence";
 import type { DocumentHistoryEntry } from "../workspace/documentHistory";
@@ -222,7 +213,9 @@ function Sidebar({
   const [internalSection, setInternalSection] = useState<SidebarSection>("annotations");
   const [featureQuery, setFeatureQuery] = useState("");
   const [projectQuery, setProjectQuery] = useState("");
+  const [libraryDetailsOpen, setLibraryDetailsOpen] = useState(false);
   const activeSection = activeSectionProp ?? internalSection;
+  const showLibrary = activeSection === "annotations" || libraryDetailsOpen;
   const setActiveSection = (section: SidebarSection) => {
     setInternalSection(section);
     onActiveSectionChange?.(section);
@@ -324,8 +317,23 @@ function Sidebar({
       />
       {/* Sequence library */}
       <div className="sidebar-header">
-        <span>序列文库</span>
+        <span className="sidebar-header__context" title={doc?.name}>
+          {showLibrary ? "序列文库" : doc?.name || "序列详情"}
+        </span>
+        {activeSection !== "annotations" && (
+          <button
+            type="button"
+            className="sidebar-header__library-toggle"
+            aria-label={showLibrary ? "收起序列文件" : "展开序列文件"}
+            aria-expanded={showLibrary}
+            onClick={() => setLibraryDetailsOpen(!libraryDetailsOpen)}
+          >
+            <FolderOpen aria-hidden="true" />
+            <span>文件</span>
+          </button>
+        )}
       </div>
+      {showLibrary && <>
       <div className="sidebar-project-search">
         <Search aria-hidden="true" />
         <input
@@ -394,6 +402,7 @@ function Sidebar({
           />
         ))}
       </div>
+      </>}
 
       <nav className="sidebar-workspace-tabs" aria-label="序列详情">
         <button type="button" className={activeSection === "annotations" ? "active" : ""} onClick={() => setActiveSection("annotations")} aria-pressed={activeSection === "annotations"}>

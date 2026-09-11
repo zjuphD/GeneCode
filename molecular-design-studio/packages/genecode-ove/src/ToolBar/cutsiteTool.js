@@ -1,4 +1,5 @@
-import { Icon, Button, KeyCombo } from "@blueprintjs/core";
+import { Button, KeyCombo } from "@blueprintjs/core";
+import { Scissors } from "lucide-react";
 import CutsiteFilter from "../CutsiteFilter";
 import React from "react";
 import ToolbarItem from "./ToolbarItem";
@@ -18,7 +19,7 @@ export default connectToEditor(
   return (
     <ToolbarItem
       {...{
-        Icon: <Icon data-test="cutsiteHideShowTool" icon="cut" />,
+        Icon: <Scissors data-test="cutsiteHideShowTool" aria-hidden="true" />,
         onIconClick: function () {
           annotationVisibilityToggle("cutsites");
         },

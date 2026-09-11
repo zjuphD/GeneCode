@@ -260,7 +260,7 @@ export function CandidateCards({ candidates, document, onAddFeature, focusedInde
   return (
     <div ref={cardRef} className={`agent-candidate${flash ? " agent-candidate--focused" : ""}`}>
       <div className="agent-candidate__header">
-        <span>{top.title ?? "首选候选"}</span>
+        <strong>{({"sgRNA candidate": "sgRNA 候选", "siRNA candidate": "siRNA 候选"} as Record<string, string>)[top.title ?? ""] ?? top.title ?? "首选候选"}</strong>
         {top.insertLength !== null && (
           <span>插入片段 {top.insertLength.toLocaleString()} bp</span>
         )}
@@ -273,6 +273,7 @@ export function CandidateCards({ candidates, document, onAddFeature, focusedInde
       )}
       {hasPrimerPair && (
         <>
+          <div className="agent-primer-table-scroll" role="region" aria-label="引物序列表" tabIndex={0}>
           <table className="agent-primer-table">
             <thead>
               <tr>
@@ -297,6 +298,7 @@ export function CandidateCards({ candidates, document, onAddFeature, focusedInde
               </tr>
             </tbody>
           </table>
+          </div>
         </>
       )}
       <FragmentPrimerTable candidate={top} />
@@ -387,9 +389,10 @@ export function CandidateCards({ candidates, document, onAddFeature, focusedInde
               type="button"
               className={`agent-candidate__switcher-btn${i === selectedIndex ? " agent-candidate__switcher-btn--active" : ""}`}
               onClick={() => setSelectedIndex(i)}
+              aria-pressed={i === selectedIndex}
               title={c.title ?? `Candidate ${i + 1}`}
             >
-              {i === 0 ? "Top" : `#${i + 1}`}
+              {i === 0 ? "首选" : `候选 ${i + 1}`}
             </button>
           ))}
         </div>

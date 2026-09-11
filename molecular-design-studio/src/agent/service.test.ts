@@ -50,6 +50,17 @@ describe("getAgentBaseUrl", () => {
     expect(getAgentBaseUrl()).toBe("http://127.0.0.1:8000");
   });
 
+  it("isolates the desktop sidecar from the browser development server", () => {
+    import.meta.env.VITE_AGENT_API_BASE = "";
+    const previous = window.__TAURI_INTERNALS__;
+    window.__TAURI_INTERNALS__ = {};
+    try {
+      expect(getAgentBaseUrl()).toBe("http://127.0.0.1:18764");
+    } finally {
+      window.__TAURI_INTERNALS__ = previous;
+    }
+  });
+
   it("returns trimmed env URL without trailing slashes", () => {
     import.meta.env.VITE_AGENT_API_BASE = "  http://custom:9000/  ";
     expect(getAgentBaseUrl()).toBe("http://custom:9000");

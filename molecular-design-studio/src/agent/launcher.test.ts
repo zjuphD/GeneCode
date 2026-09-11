@@ -94,7 +94,7 @@ describe("agent launcher bridge", () => {
       },
     });
     expect(invoke).toHaveBeenNthCalledWith(2, "restart_agent_service", {
-      baseUrl: "http://127.0.0.1:8000",
+      baseUrl: "http://127.0.0.1:18764",
     });
   });
 

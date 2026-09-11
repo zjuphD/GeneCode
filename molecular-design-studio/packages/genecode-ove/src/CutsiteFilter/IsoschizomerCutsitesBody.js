@@ -6,7 +6,7 @@ import { showDialog } from "../GlobalDialogUtils";
 /**
  * Body of the isoschizomer dialog, split out so tests can render it directly
  * without the wrapDialog / withEditorProps HOC stack. Lists every enzyme that
- * cuts the same position (isoschizomers), each rendered as a tag (name +
+ * shares a cut site in this sequence, each rendered as a tag (name +
  * recognition site, when the enzyme data is known) and clickable to open the
  * per-enzyme details dialog.
  */
@@ -20,8 +20,8 @@ export default function IsoschizomerCutsitesBody({
   return (
     <div className={Classes.DIALOG_BODY}>
       <div>
-        These enzymes all recognize the same sequence and cut at the same
-        position:
+        These enzymes share a cut site on this sequence. Their recognition
+        sequences may differ:
       </div>
       <div
         style={{

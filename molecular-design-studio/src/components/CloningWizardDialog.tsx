@@ -36,18 +36,40 @@ export function CloningWizardDialog({
   // close. The trigger is captured once on mount (a callback-identity dep would
   // re-run and re-capture the dialog's own input as "previously focused").
   const onCancelRef = useRef(onCancel);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   onCancelRef.current = onCancel;
   useEffect(() => {
     const previouslyFocused =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null;
+    closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancelRef.current();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onCancelRef.current();
+      }
+      if (event.key === "Tab") {
+        const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]',
+        ) ?? []);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
     };
-    window.addEventListener("keydown", onKeyDown);
+    // Capture Escape before the workspace listener can also close the Agent.
+    window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       previouslyFocused?.focus();
     };
   }, []);
@@ -70,6 +92,10 @@ export function CloningWizardDialog({
   const effectiveInsertSequence =
     insertSource === "selection" && selection ? selection.sequence : insertSequence;
   const effectiveInsertName = insertName.trim() || "Insert";
+  const hasInsert = effectiveInsertSequence.replace(/[\s\d]/g, "").length > 0;
+  const position = Number(insertAt);
+  const positionValid = insertAt.trim() !== "" && Number.isInteger(position)
+    && position >= 1 && position <= vector.sequence.length + 1;
 
   const result: AssemblyResult = useMemo(() => {
     return simulateAssembly({
@@ -81,7 +107,7 @@ export function CloningWizardDialog({
         features: [],
       },
       method,
-      insertAt: Math.max(0, (Number(insertAt) || 1) - 1),
+      insertAt: Number(insertAt) - 1,
 
       ...(method === "gibson"
         ? {
@@ -120,12 +146,14 @@ export function CloningWizardDialog({
   // derived from the actual vector recognition sites and both strand cuts.
   // Missing sites or incompatible ends remain a review-only preview.
   const simulationOnly = method === "golden_gate" && !result.goldenGateGraph?.validated;
-  const canCreate = result.ok && result.construct !== null && !hasFailedChecks && !simulationOnly;
+  const canCreate = hasInsert && positionValid && result.ok && result.construct !== null && !hasFailedChecks && !simulationOnly;
+  const showReview = hasInsert && positionValid;
 
   return createPortal(
     <div className="paste-sequence-overlay" onMouseDown={onCancel}>
       <div
         className="paste-sequence create-feature-dialog cloning-wizard"
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cloning-wizard-title"
@@ -135,17 +163,20 @@ export function CloningWizardDialog({
           <div>
             <h2 id="cloning-wizard-title">克隆到载体</h2>
             <p className="create-feature-dialog__selection">
-              Vector “{vector.name}” · {vector.sequence.length.toLocaleString()} bp ·{" "}
-              {vector.circular ? "circular" : "linear"}
+              载体 {vector.name} · {vector.sequence.length.toLocaleString()} bp ·{" "}
+              {vector.circular ? "环状" : "线性"}
             </p>
           </div>
-          <button type="button" onClick={onCancel} aria-label="关闭克隆对话框">
+          <button ref={closeRef} type="button" onClick={onCancel} aria-label="关闭克隆对话框">
             <X aria-hidden="true" />
           </button>
         </div>
 
+        <div className="cloning-wizard__body">
+        <div className="cloning-wizard__inputs">
         <div className="cloning-wizard__section">
-          <label className="cloning-wizard__field">
+          <h3>插入片段</h3>
+          <div className="cloning-wizard__field">
             <span>插入片段来源</span>
             <div className="cloning-wizard__source-toggle" role="group" aria-label="插入片段来源">
               <label className={insertSource === "selection" ? "cloning-wizard__source--active" : ""}>
@@ -171,7 +202,7 @@ export function CloningWizardDialog({
                 粘贴序列
               </label>
             </div>
-          </label>
+          </div>
           <label className="cloning-wizard__field">
             <span>插入片段名称</span>
             <input value={insertName} onChange={(event) => setInsertName(event.target.value)} />
@@ -193,11 +224,14 @@ export function CloningWizardDialog({
               type="number"
               min={1}
               max={vector.sequence.length + 1}
+              step={1}
               value={insertAt}
+              aria-invalid={!positionValid}
+              aria-describedby="cloning-position-hint"
               onChange={(event) => setInsertAt(event.target.value)}
             />
-            <small className="cloning-wizard__field-hint">
-              {vector.circular
+            <small id="cloning-position-hint" className={`cloning-wizard__field-hint${positionValid ? "" : " cloning-wizard__field-hint--error"}`}>
+              {!positionValid ? `请输入 1–${vector.sequence.length + 1} 之间的整数坐标。` : vector.circular
                 ? "载体在此碱基之前切开，插入片段放置于此。"
                 : "插入片段放置于此碱基之前（N+1 时追加到末尾）。"}
             </small>
@@ -205,6 +239,7 @@ export function CloningWizardDialog({
         </div>
 
         <div className="cloning-wizard__section">
+          <h3>组装设置</h3>
           <label className="cloning-wizard__field">
             <span>组装方法</span>
             <select
@@ -258,19 +293,27 @@ export function CloningWizardDialog({
             </div>
           )}
         </div>
+        </div>
 
-        <div className="cloning-wizard__result">
+        <div className="cloning-wizard__result" role="region" aria-label="构建体预览与校验">
           <div className="cloning-wizard__result-header">
             <GitMerge aria-hidden="true" />
             <strong>模拟构建体</strong>
-            {result.ok && result.construct && (
+            {showReview && result.ok && result.construct && (
               <span className="cloning-wizard__result-meta">
                 {result.construct.name} · {result.construct.sequence.length.toLocaleString()} bp ·{" "}
-                {result.construct.circular ? "circular" : "linear"}
+                {result.construct.circular ? "环状" : "线性"}
               </span>
             )}
           </div>
 
+          {!showReview ? (
+            <div className="cloning-wizard__empty">
+              <Dna aria-hidden="true" />
+              <h3>{hasInsert ? "检查插入位置" : "添加插入片段"}</h3>
+              <p>{hasInsert ? "输入载体范围内的整数坐标后，即可查看连接处和校验结果。" : "选择已有选区，或粘贴 DNA 序列。连接处和校验结果会显示在这里。"}</p>
+            </div>
+          ) : <>
           <div className="cloning-wizard__notice" role="note">
             <strong>模拟结果——未经实验验证</strong>
             <span>
@@ -278,7 +321,7 @@ export function CloningWizardDialog({
                 ? result.goldenGateGraph?.validated
                   ? "已按载体的 Type IIS 双链切点和兼容突出端生成片段图；结果仍是计算预测，需在实验室验证酶活、甲基化和组装效率。"
                   : "需要载体两处可验证的 Type IIS 位点、无内部位点且突出端兼容，当前仅显示预览，不能创建构建体。"
-                : "Gibson 组装为启发式模拟（同源臂长度 / GC 检查）。订购前请实验验证连接处。"}
+                : "检查同源臂长度、GC 与自定义臂的对应末端匹配；不代表 PCR 或组装一定成功。实验前请复核引物与连接处。"}
             </span>
           </div>
 
@@ -318,6 +361,8 @@ export function CloningWizardDialog({
               </div>
             ))}
           </div>
+          </>}
+        </div>
         </div>
 
         <div className="paste-sequence__actions">
@@ -333,7 +378,7 @@ export function CloningWizardDialog({
           <button
             type="button"
             className="editor-start__primary"
-            onClick={() => result.construct && onCreate(result.construct)}
+            onClick={() => canCreate && result.construct && onCreate(result.construct)}
             disabled={!canCreate}
             title={simulationOnly ? "Golden Gate 当前仅供预览，完成真实 Type IIS 切点模型前不可创建构建体" : canCreate ? "将模拟构建体作为新文档打开" : "请先修正上方错误"}
           >

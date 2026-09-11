@@ -10,9 +10,14 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Drawer, IconButton, Tooltip } from "@mui/material";
+import { Dialog, IconButton, Tooltip } from "@mui/material";
 import Check from "@mui/icons-material/CheckCircleRounded";
 import Download from "@mui/icons-material/DownloadRounded";
+import Tune from "@mui/icons-material/TuneRounded";
+import SmartToy from "@mui/icons-material/SmartToyRounded";
+import Palette from "@mui/icons-material/PaletteRounded";
+import Update from "@mui/icons-material/UpdateRounded";
+import Keyboard from "@mui/icons-material/KeyboardRounded";
 import RefreshCw from "@mui/icons-material/RefreshRounded";
 import X from "@mui/icons-material/CloseRounded";
 import { getAgentBaseUrl, switchAgentModel, testAgentLlmConnection } from "../agent/service";
@@ -32,6 +37,7 @@ import {
   type UpdateCheckResult,
   type UpdateProgress,
 } from "../agent/updater";
+import { getThemePref, setThemePref, subscribeTheme, type ThemePref } from "../ui/themePreference";
 
 interface HealthStatus {
   status: string;
@@ -137,6 +143,36 @@ const DEEPSEEK_PRESET = {
  * package size is unknown until the download starts, so it appears live on the
  * progress bar (some manifests announce a size upfront, shown as a hint).
  */
+function AppearanceSection() {
+  const [pref, setPrefState] = useState<ThemePref>(getThemePref);
+  useEffect(() => subscribeTheme(() => setPrefState(getThemePref())), []);
+  return (
+    <section className="settings-section">
+      <h3 className="settings-section__title">外观</h3>
+      <div className="settings-row">
+        {(
+          [
+            ["light", "浅色"],
+            ["dark", "深色"],
+            ["glass", "毛玻璃"],
+            ["system", "跟随系统"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            className={`settings-btn${pref === value ? " settings-btn--primary" : ""}`}
+            aria-pressed={pref === value}
+            onClick={() => setThemePref(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function UpdateSection() {
   const desktop = isTauriRuntime();
   const [appVersion, setAppVersion] = useState<string | null>(null);
@@ -491,7 +527,7 @@ function AgentModelSettings({
     <div className="settings-form" aria-busy={loading || saving}>
       {!desktop && (
         <p className="settings-notice">
-          Browser session — changes apply to the running local Agent service immediately, no restart needed.
+          浏览器会话：模型设置会立即应用到本地 Agent 服务，无需重启。密钥不会显示在这里。
         </p>
       )}
 
@@ -654,17 +690,26 @@ function AgentModelSettings({
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { health, loading, error, checkHealth } = useDiagnostics();
+  const [activeSection, setActiveSection] = useState<"agent" | "appearance" | "updates" | "shortcuts" | "advanced">("agent");
+
+  const sections = [
+    { id: "agent" as const, label: "Agent 与模型", detail: "服务、Provider、模型", icon: <SmartToy aria-hidden="true" /> },
+    { id: "appearance" as const, label: "外观", detail: "主题与显示", icon: <Palette aria-hidden="true" /> },
+    { id: "updates" as const, label: "应用更新", detail: "版本与更新", icon: <Update aria-hidden="true" /> },
+    { id: "shortcuts" as const, label: "快捷键", detail: "键盘操作", icon: <Keyboard aria-hidden="true" /> },
+    { id: "advanced" as const, label: "高级诊断", detail: "连接与本地数据", icon: <Tune aria-hidden="true" /> },
+  ];
 
   return (
-    <Drawer
-      anchor="right"
+    <Dialog
+      maxWidth={false}
       open
       onClose={onClose}
       slotProps={{
         backdrop: { className: "settings-overlay" },
         paper: {
           component: "aside",
-          className: "settings-panel",
+          className: "settings-panel workbench-settings",
           role: "dialog",
           "aria-modal": true,
           "aria-labelledby": "settings-title",
@@ -674,7 +719,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <div className="settings-panel__header">
           <div>
             <span className="settings-panel__title" id="settings-title">设置</span>
-            <span className="settings-panel__subtitle">Agent、文件与应用偏好</span>
+            <span className="settings-panel__subtitle">本地 Agent、模型与应用偏好</span>
           </div>
           <Tooltip title="关闭设置">
             <IconButton size="small" className="settings-panel__close" onClick={onClose} aria-label="Close settings">
@@ -683,78 +728,98 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </Tooltip>
         </div>
 
-        <div className="settings-panel__body">
-        <section className="settings-section">
-          <h3 className="settings-section__title">Agent 服务</h3>
-          <div className="settings-status-card">
-            <div className="settings-row">
-              <StatusDot status={health?.status ?? "offline"} />
-              <span>{loading ? "Checking…" : error ?? health?.label ?? "Unknown"}</span>
-            </div>
-            <button
-              type="button"
-              className="settings-icon-btn"
-              onClick={checkHealth}
-              disabled={loading}
-              aria-label="Refresh Agent status"
-              title="Refresh Agent status"
-            >
-              <RefreshCw aria-hidden="true" />
-            </button>
-          </div>
-        </section>
+        <div className="settings-panel__layout">
+          <nav className="settings-nav" aria-label="设置分类">
+            <div className="settings-nav__eyebrow">设置</div>
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                className={`settings-nav__item${activeSection === section.id ? " is-active" : ""}`}
+                onClick={() => setActiveSection(section.id)}
+                aria-current={activeSection === section.id ? "page" : undefined}
+              >
+                <span className="settings-nav__icon">{section.icon}</span>
+                <span className="settings-nav__copy">
+                  <strong>{section.label}</strong>
+                  <small>{section.detail}</small>
+                </span>
+              </button>
+            ))}
+          </nav>
 
-        <section className="settings-section">
-          <h3 className="settings-section__title">AI 模型</h3>
-          <AgentModelSettings onSaved={checkHealth} health={health} />
-        </section>
-
-        <UpdateSection />
-
-        <section className="settings-section">
-          <h3 className="settings-section__title">键盘快捷键</h3>
-          <div className="settings-detail">
-            <div className="settings-detail__row">
-              <span>打开序列</span>
-              <kbd>⌘O</kbd>
-            </div>
-            <div className="settings-detail__row">
-              <span>保存序列</span>
-              <kbd>⌘S</kbd>
-            </div>
-            <div className="settings-detail__row">
-              <span>另存为</span>
-              <kbd>⌘⇧S</kbd>
-            </div>
-          </div>
-        </section>
-
-        <details className="settings-advanced">
-          <summary>高级诊断</summary>
-          <div className="settings-advanced__content">
-            {health && (
-              <div className="settings-detail">
-                <div className="settings-detail__row"><span>后端地址</span><code>{getAgentBaseUrl()}</code></div>
-                {health.model && <div className="settings-detail__row"><span>模型</span><code>{health.model}</code></div>}
-                {health.endpoint && <div className="settings-detail__row"><span>服务商</span><code>{health.endpoint}</code></div>}
-              </div>
+          <div className="settings-panel__body">
+            {activeSection === "agent" && (
+              <>
+                <section className="settings-section">
+                  <h3 className="settings-section__title">Agent 服务</h3>
+                  <div className="settings-status-card">
+                    <div className="settings-row">
+                      <StatusDot status={health?.status ?? "offline"} />
+                      <span>{loading ? "检查中…" : error ?? health?.label ?? "未知状态"}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="settings-icon-btn"
+                      onClick={checkHealth}
+                      disabled={loading}
+                      aria-label="Refresh Agent status"
+                      title="刷新 Agent 状态"
+                    >
+                      <RefreshCw aria-hidden="true" />
+                    </button>
+                  </div>
+                </section>
+                <section className="settings-section">
+                  <h3 className="settings-section__title">AI 模型</h3>
+                  <AgentModelSettings onSaved={checkHealth} health={health} />
+                </section>
+              </>
             )}
-            <p className="settings-advanced__note">序列库、Agent 任务与恢复数据都保存在本机。</p>
-            <button
-              type="button"
-              className="settings-btn settings-btn--danger"
-              onClick={() => {
-                if (confirm("确定要重置所有本地应用数据吗？此操作无法撤销。")) {
-                  localStorage.clear();
-                  window.location.reload();
-                }
-              }}
-            >
-              重置本地应用数据
-            </button>
+
+            {activeSection === "appearance" && <AppearanceSection />}
+            {activeSection === "updates" && <UpdateSection />}
+
+            {activeSection === "shortcuts" && (
+              <section className="settings-section">
+                <h3 className="settings-section__title">键盘快捷键</h3>
+                <div className="settings-detail">
+                  <div className="settings-detail__row"><span>打开序列</span><kbd>⌘O</kbd></div>
+                  <div className="settings-detail__row"><span>保存序列</span><kbd>⌘S</kbd></div>
+                  <div className="settings-detail__row"><span>另存为</span><kbd>⌘⇧S</kbd></div>
+                </div>
+              </section>
+            )}
+
+            {activeSection === "advanced" && (
+              <section className="settings-section">
+                <h3 className="settings-section__title">高级诊断</h3>
+                <div className="settings-advanced__content">
+                  {health && (
+                    <div className="settings-detail">
+                      <div className="settings-detail__row"><span>后端地址</span><code>{getAgentBaseUrl()}</code></div>
+                      {health.model && <div className="settings-detail__row"><span>模型</span><code>{health.model}</code></div>}
+                      {health.endpoint && <div className="settings-detail__row"><span>服务商</span><code>{health.endpoint}</code></div>}
+                    </div>
+                  )}
+                  <p className="settings-advanced__note">序列库、Agent 任务与恢复数据都保存在本机。</p>
+                  <button
+                    type="button"
+                    className="settings-btn settings-btn--danger"
+                    onClick={() => {
+                      if (confirm("确定要重置所有本地应用数据吗？此操作无法撤销。")) {
+                        localStorage.clear();
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    重置本地应用数据
+                  </button>
+                </div>
+              </section>
+            )}
           </div>
-        </details>
-      </div>
-    </Drawer>
+        </div>
+    </Dialog>
   );
 }

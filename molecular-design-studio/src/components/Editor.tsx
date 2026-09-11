@@ -1,9 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useCallback, useRef, useState, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
-import ClipboardPaste from "@mui/icons-material/ContentPasteGoRounded";
-import Dna from "@mui/icons-material/BiotechRounded";
-import FileUp from "@mui/icons-material/UploadFileRounded";
-import FolderOpen from "@mui/icons-material/FolderOpenRounded";
+import { ClipboardPaste, Dna, FileUp, FolderOpen } from "lucide-react";
 import { parseGenBank } from "../editor/parser";
 import { toOveData } from "../editor/adapter";
 import {
@@ -433,26 +430,27 @@ function Editor({
         <section className="editor-start" aria-labelledby="editor-start-title">
           <div className="editor-start__intro">
             <span className="editor-start__icon" aria-hidden="true"><Dna /></span>
+            <span className="editor-start__kicker" aria-hidden="true">GENECODE</span>
             <h1 id="editor-start-title">添加序列开始编辑</h1>
             <p>打开现有文件、粘贴序列，或加载 pUC19 示例。</p>
           </div>
           <div className="editor-start__actions">
             <button type="button" className="editor-start__action editor-start__action--primary" onClick={handleOpen}>
-              <FolderOpen aria-hidden="true" />
+              <span className="editor-start__glyph" aria-hidden="true"><FolderOpen /></span>
               <span><strong>打开序列文件</strong><small>GenBank、FASTA、SnapGene</small></span>
             </button>
             <button type="button" className="editor-start__action" onClick={() => setShowPaste(true)}>
-              <ClipboardPaste aria-hidden="true" />
+              <span className="editor-start__glyph" aria-hidden="true"><ClipboardPaste /></span>
               <span><strong>粘贴序列</strong><small>DNA 或 RNA 文本</small></span>
             </button>
             {onImport && (
               <button type="button" className="editor-start__action" onClick={handleImport}>
-                <FileUp aria-hidden="true" />
+                <span className="editor-start__glyph" aria-hidden="true"><FileUp /></span>
                 <span><strong>导入记录</strong><small>一个或多个 FASTA 条目</small></span>
               </button>
             )}
             <button type="button" className="editor-start__action" onClick={handleUseDemo}>
-              <Dna aria-hidden="true" />
+              <span className="editor-start__glyph" aria-hidden="true"><Dna /></span>
               <span><strong>使用 pUC19 示例</strong><small>2,686 bp 环状载体</small></span>
             </button>
           </div>

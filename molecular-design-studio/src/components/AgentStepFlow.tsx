@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, Circle, CircleAlert, LoaderCircle } from "lucide-react";
 import type { NodeTooltipContent } from "../agent/nodeLocate";
 import type { RunLogRow, TimelineEvent } from "../agent/responseTypes";
 import type { StepGraph, StepNode } from "../agent/stepGraph";
@@ -23,11 +24,44 @@ function nodeTone(node: StepNode): string {
   return `agent-step-flow__event--${node.status}`;
 }
 
-function toneIcon(status: StepNode["status"]): string {
-  if (status === "done") return "✓";
-  if (status === "error") return "!";
-  if (status === "active") return "·";
-  return "○";
+const TOOL_LABELS: Record<string, string> = {
+  read_open_sequence: "读取当前序列",
+  list_features: "读取序列注释",
+  sequence_stats: "计算序列指标",
+  parse_sequence: "解析序列文件",
+  resolve_rt_target: "解析 RT-qPCR 目标",
+  design_rtqpcr: "设计 RT-qPCR 引物",
+  check_rt_specificity: "检查引物特异性",
+  resolve_sgrna_target: "解析 sgRNA 目标",
+  design_sgrna: "设计 sgRNA 候选",
+  check_sgrna_offtarget: "检查 sgRNA 脱靶",
+  check_sgrna_quality: "检查 sgRNA 质量",
+  verify_sgrna_quality: "检查 sgRNA 质量",
+  check_sirna_quality: "检查 siRNA 质量",
+  resolve_sirna_target: "解析 siRNA 转录本",
+  design_sirna: "设计 siRNA 候选",
+  check_sirna_offtarget: "检查 siRNA 脱靶",
+  scan_restriction_sites: "扫描限制性位点",
+  design_cloning: "生成克隆方案",
+  review_construct: "审查构建体",
+  design_mutagenesis: "设计突变引物",
+  llm_planner: "更新执行计划",
+};
+
+function friendlyToolLabel(tool: string): string {
+  const normalized = tool.trim();
+  if (!normalized) return "执行步骤";
+  if (TOOL_LABELS[normalized]) return TOOL_LABELS[normalized];
+  return normalized
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function toneIcon(status: StepNode["status"]) {
+  if (status === "done") return <Check />;
+  if (status === "error") return <CircleAlert />;
+  if (status === "active") return <LoaderCircle className="agent-motion-spin" />;
+  return <Circle />;
 }
 
 function statusText(
@@ -38,9 +72,9 @@ function statusText(
 ): string {
   if (error) return "执行失败";
   if (isBusy) return "处理中…";
-  if (hasCompletedResult) return "处理完成";
-  if (hasActivity) return "处理完成";
-  return "等待 Agent";
+  if (hasCompletedResult) return "结果已生成";
+  if (hasActivity) return "已读取上下文";
+  return "等待输入";
 }
 
 function formatElapsed(seconds: number): string {
@@ -52,12 +86,11 @@ function formatElapsed(seconds: number): string {
 function eventLabel(node: StepNode): string {
   if (node.layer === 2) return "验证结果";
   if (node.layer === 3) return "结果可用";
-  return node.label || node.tool || "执行步骤";
+  return friendlyToolLabel(node.label || node.tool || "执行步骤");
 }
 
 function nodeDetail(node: StepNode): string | null {
   if (node.detail) return node.detail;
-  if (node.tool && node.tool !== node.label) return node.tool;
   return null;
 }
 
@@ -91,8 +124,10 @@ function EventRow({
       <span className="agent-step-flow__event-copy">
         <span className="agent-step-flow__event-title">
           {eventLabel(node)}
-          {node.tool && node.tool !== eventLabel(node) && (
-            <code>{node.tool}</code>
+          {clickable && (
+            <span className="agent-step-flow__technical" title={`内部工具：${node.tool}`}>
+              定位
+            </span>
           )}
         </span>
         {nodeDetail(node) && (
@@ -199,21 +234,19 @@ export function AgentStepFlow({
   }, [graph.nodes, timeline]);
 
   return (
-    <section className="agent-step-flow" aria-label="Step flow">
-      <div className="agent-step-flow__status" aria-live="polite">
-        <span className="agent-step-flow__label">Step flow</span>
+    <section className="agent-step-flow" aria-label="任务流程">
+      <details className="agent-disclosure" open={error ? true : undefined}>
+      <summary className="agent-step-flow__status">
         <span className={`agent-step-flow__status-mark${isBusy ? " agent-step-flow__status-mark--busy" : ""}`} aria-hidden="true">
-          {isBusy ? "✦" : error ? "!" : hasCompletedResult ? "✓" : "·"}
+          {isBusy ? <LoaderCircle className="agent-motion-spin" /> : error ? <CircleAlert /> : <Check />}
         </span>
         <strong>{statusText(isBusy, hasCompletedResult, error, graph.nodes.length > 0)}</strong>
-        {isBusy && <span className="agent-step-flow__elapsed">思考 {formatElapsed(elapsedSeconds)}</span>}
-      </div>
-
-      {thought && <p className="agent-step-flow__thought">{thought}</p>}
+        <span className="agent-step-flow__elapsed">{isBusy ? formatElapsed(elapsedSeconds) : toolCount > 0 ? `${toolCount} 个工具` : "执行记录"}</span>
+        <ChevronDown className="agent-disclosure__chevron" aria-hidden="true" />
+      </summary>
 
       {summary && (
         <div className="agent-step-flow__summary" aria-live="polite">
-          <span className="agent-step-flow__summary-icon" aria-hidden="true">⌁</span>
           <span>{summary}</span>
         </div>
       )}
@@ -237,7 +270,6 @@ export function AgentStepFlow({
         ))}
         {timelineSummaries.map((event) => (
           <div key={event.event_id || `${event.type}-${event.summary}`} className="agent-step-flow__timeline-event">
-            <span className="agent-step-flow__event-icon" aria-hidden="true">⌁</span>
             <span className="agent-step-flow__event-copy">
               <span className="agent-step-flow__event-detail">{event.summary}</span>
             </span>
@@ -245,12 +277,8 @@ export function AgentStepFlow({
         ))}
       </div>
 
-      {isBusy && (
-        <div className="agent-step-flow__thinking" role="status" aria-live="polite">
-          <span aria-hidden="true">✦</span>
-          <span>思考中···</span>
-        </div>
-      )}
+      </details>
+      {thought && <p className="agent-step-flow__thought" role="status">{thought}</p>}
 
       {/* Retain the graph for locate/tooltip regression coverage without
           exposing the dense DAG as a second visual workflow. */}

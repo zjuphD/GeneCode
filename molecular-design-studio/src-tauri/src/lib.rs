@@ -60,6 +60,32 @@ mod updater_config_tests {
     }
 }
 
+/// Toggle macOS window vibrancy for the "glass" theme. The desktop shows
+/// through wherever the shell paints translucent surfaces; every other theme
+/// paints opaque backgrounds, so clearing vibrancy fully restores them.
+/// Non-macOS targets have no native equivalent wired yet (design doc §1).
+#[tauri::command]
+fn set_glass(window: tauri::Window, enabled: bool) {
+    #[cfg(target_os = "macos")]
+    {
+        use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial};
+        if enabled {
+            let _ = apply_vibrancy(
+                &window,
+                NSVisualEffectMaterial::UnderWindowBackground,
+                None,
+                None,
+            );
+        } else {
+            let _ = clear_vibrancy(&window);
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (window, enabled);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
@@ -83,6 +109,7 @@ pub fn run() {
             agent_settings::get_agent_llm_settings,
             agent_settings::save_agent_llm_settings,
             is_updater_configured,
+            set_glass,
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

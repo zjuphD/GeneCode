@@ -229,6 +229,8 @@ export function PrimerExplanation({ candidate }: { candidate: ResultCandidate })
           {model.overallLabel}
         </span>
       </div>
+      <details className="agent-disclosure">
+      <summary>设计依据与检查详情</summary>
       <div className="agent-primer-explanation__rationale">
         <span>为什么这样设计</span>
         <p>{model.rationale}</p>
@@ -253,6 +255,7 @@ export function PrimerExplanation({ candidate }: { candidate: ResultCandidate })
           {model.learning.map((item) => <li key={item}>{item}</li>)}
         </ul>
       </div>
+      </details>
     </section>
   );
 }

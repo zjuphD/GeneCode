@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {
   buildRowLayout,
   buildRowOffsets,
+  fitAnnotationLabel,
+  hasAnnotationArrowhead,
   getRecognitionSiteOverlaps,
   getFocusPosition,
   getCutsiteBottomPosition,
@@ -203,6 +205,46 @@ for (const left of collisionLabels) {
     );
   }
 }
+
+// Labels at either edge stay inside the base grid, while their true cut
+// boundary remains unchanged for hit testing and connector rendering.
+const edgeSites = [0, 1, 57, 59].map((position, index) => ({
+  id: `edge-${index}`, start: position, end: Math.min(59, position + 2),
+  annotation: { name: `LongEnzymeName${index}`, start: position, end: Math.min(59, position + 2), topSnipPosition: position }
+}));
+const edgeLayout = buildRowLayout({ ...row, cutsites: edgeSites }, visibleDefaults);
+for (const item of edgeLayout.tracks.find(track => track.id === "labels").items) {
+  assert(item.labelExtent.start >= 0);
+  assert(item.labelExtent.end <= 60);
+}
+const sameTopDifferentBottom = buildRowLayout({ ...row, primers: [], cutsites: [
+  { id: "cut-a", start: 10, end: 18, annotation: { name: "EnzymeA", start: 10, end: 18, topSnipPosition: 12, bottomSnipPosition: 16 } },
+  { id: "cut-b", start: 10, end: 18, annotation: { name: "EnzymeB", start: 10, end: 18, topSnipPosition: 12, bottomSnipPosition: 18 } }
+] }, visibleDefaults);
+assert.equal(sameTopDifferentBottom.tracks.find(track => track.id === "labels").items.length, 2);
+assert(edgeLayout.tracks.find(track => track.id === "labels").y < edgeLayout.tracks.find(track => track.id === "sequence-forward").y);
+assert(edgeLayout.tracks.find(track => track.id === "features-forward").y > edgeLayout.tracks.find(track => track.id === "sequence-reverse").y);
+assert.equal(fitAnnotationLabel("AmpR", 100), "AmpR");
+assert.equal(fitAnnotationLabel("long feature label", 56), "long f…");
+assert.equal(fitAnnotationLabel("特征很长的中文名称", 56), "特征很…");
+assert.equal(fitAnnotationLabel("AmpR", 10), "");
+assert.equal(hasAnnotationArrowhead({ start: 0, end: 59, sourceStart: 0, sourceEnd: 80, annotation: { forward: true } }), false);
+assert.equal(hasAnnotationArrowhead({ start: 60, end: 80, sourceStart: 0, sourceEnd: 80, annotation: { forward: true } }), true);
+assert.equal(hasAnnotationArrowhead({ start: 60, end: 80, sourceStart: 0, sourceEnd: 80, annotation: { forward: false } }), false);
+assert.equal(hasAnnotationArrowhead({ start: 0, end: 59, sourceStart: 0, sourceEnd: 80, annotation: { forward: false } }), true);
+
+const denseRow = { ...row, primers: [], cutsites: Array.from({ length: 35 }, (_, index) => ({
+  id: `dense-${index}`, start: index, end: index + 1,
+  annotation: { name: `DenseEnzyme${index}`, start: index, end: index + 1, topSnipPosition: index }
+})) };
+const denseLayout = buildRowLayout(denseRow, visibleDefaults);
+const expandedLayout = buildRowLayout(denseRow, { ...visibleDefaults, labelsExpanded: true });
+const denseLabels = denseLayout.tracks.find(track => track.id === "labels");
+const expandedLabels = expandedLayout.tracks.find(track => track.id === "labels");
+assert(denseLabels.hiddenCount > 0);
+assert.equal(expandedLabels.hiddenCount, 0);
+assert.equal(expandedLabels.items.length, 35);
+assert(expandedLayout.height > denseLayout.height);
 
 const ordinarySelectionLayout = buildRowLayout(row, {
   ...visibleDefaults,

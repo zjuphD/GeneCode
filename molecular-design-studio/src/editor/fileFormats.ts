@@ -172,7 +172,10 @@ export function exportToGenbank(doc: SequenceDocument): string {
   if (!result || typeof result !== "string") {
     throw new Error("GenBank export failed");
   }
-  return result;
+  // bio-parsers emits these two headers before column 13. Fixed-column
+  // GenBank readers otherwise truncate the accession/version on re-import.
+  return result.replace(/^(ACCESSION|VERSION)[ \t]+([^\r\n]*)/gm,
+    (_line, key: string, value: string) => `${key.padEnd(12)}${value}`);
 }
 
 /**

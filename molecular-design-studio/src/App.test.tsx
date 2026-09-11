@@ -286,13 +286,24 @@ describe("App sandbox edit (apply as new file)", () => {
     mockBridge.applyConfirmedPatch.mockReset();
     setupProject();
     // The Agent panel is lazily imported and only mounted once opened
-    // (A-PERF-001). Stub a wide viewport so it starts open, then wait for the
-    // mocked module to mount before interacting with its controls.
+    // (A-PERF-001). Explicitly restore an open Agent for these sandbox tests;
+    // a fresh workspace now starts with the editor only.
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       value: 1600,
     });
     window.localStorage.clear();
+    window.localStorage.setItem("genecode-agent-open", "true");
+  });
+
+  it("starts editor-first and opens the Agent on demand in a fresh workspace", async () => {
+    setupWorkspace();
+    window.localStorage.removeItem("genecode-agent-open");
+    render(<App />);
+    expect(screen.queryByTestId("copy-action")).toBeNull();
+    expect(screen.getByRole("main", { name: "序列工作区" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Open GeneCode Agent" }));
+    await screen.findByTestId("copy-action");
   });
 
   it("keeps the duplicate sequence library drawer closed by default", async () => {
@@ -303,6 +314,17 @@ describe("App sandbox edit (apply as new file)", () => {
 
     expect(screen.queryByTestId("sidebar")).toBeNull();
     expect(screen.getByRole("navigation", { name: "已打开序列" })).toBeTruthy();
+  });
+
+  it("keeps file navigation and commands inside the sequence workbench", async () => {
+    setupWorkspace();
+    render(<App />);
+    await screen.findByTestId("copy-action");
+    const main = screen.getByRole("main", { name: "序列工作区" });
+    expect(main.contains(screen.getByRole("navigation", { name: "已打开序列" }))).toBe(true);
+    expect(main.contains(screen.getByRole("region", { name: "Document commands" }))).toBe(true);
+    expect(main.contains(screen.getByTestId("copy-action"))).toBe(false);
+    expect(main.compareDocumentPosition(screen.getByTestId("copy-action")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("applies the pending change to a named copy without touching the original", async () => {

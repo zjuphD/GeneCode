@@ -37,7 +37,9 @@ export function getAgentBaseUrl(): string {
   if (typeof env === "string" && env.trim().length > 0) {
     return env.trim().replace(/\/+$/, "");
   }
-  return DEFAULT_BASE_URL;
+  return typeof window !== "undefined" && window.__TAURI_INTERNALS__
+    ? "http://127.0.0.1:18764"
+    : DEFAULT_BASE_URL;
 }
 
 // ── Local API token (A-API-001) ──────────────────────────────
@@ -313,6 +315,33 @@ export interface AgentStreamEvent {
   data: Record<string, unknown>;
 }
 
+export interface AgentJournalRun {
+  run_id: string;
+  mode: string;
+  workspace: string;
+  status: string;
+  plan_snapshot_hash?: string;
+  execute_snapshot_hash?: string;
+  created_at?: number;
+  updated_at?: number;
+  events?: Array<Record<string, unknown>>;
+  artifacts?: Array<Record<string, unknown>>;
+}
+
+export interface AgentArtifactRead {
+  artifact_id: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  filename?: string;
+  content_hash?: string;
+  byte_size?: number;
+  data?: Record<string, unknown>;
+  dataPreview?: string;
+  dataTruncated?: boolean;
+}
+
 export interface AgentLlmConnectionResult {
   connected: boolean;
   message: string;
@@ -487,6 +516,118 @@ export async function checkAgentHealth(
       throw err;
     }
     throw new AgentServiceError("Cannot reach Agent service");
+  } finally {
+    cleanup();
+  }
+}
+
+/** Read durable backend Run metadata without loading artifact bodies. */
+export async function listAgentRuns(
+  limit = 50,
+  signal?: AbortSignal,
+): Promise<AgentJournalRun[]> {
+  const base = getAgentBaseUrl();
+  const boundedLimit = Math.max(1, Math.min(200, Math.floor(limit)));
+  const { controller, cleanup, timedOut } = createRequestController(signal, 10_000);
+  try {
+    const response = await fetch(`${base}/api/agent/runs?limit=${boundedLimit}`, {
+      method: "GET",
+      headers: await withTokenHeaders({ Accept: "application/json" }),
+      signal: controller.signal,
+    });
+    const raw = await parseJsonSafe(response);
+    if (!response.ok) {
+      const message = raw && typeof raw === "object" && "error" in raw
+        ? String((raw as Record<string, unknown>).error)
+        : `Run history request failed (${response.status})`;
+      throw new AgentServiceError(message, response.status);
+    }
+    const runs: unknown[] = raw && typeof raw === "object" && Array.isArray((raw as Record<string, unknown>).runs)
+      ? (raw as Record<string, unknown>).runs as unknown[]
+      : [];
+    return runs.filter((value: unknown): value is AgentJournalRun => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+      const row = value as Record<string, unknown>;
+      return typeof row.run_id === "string" && typeof row.status === "string";
+    });
+  } catch (err) {
+    if (timedOut()) throw new AgentServiceError("Run history request timed out");
+    if (err instanceof AgentServiceError) throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new AgentServiceError("Run history request failed");
+  } finally {
+    cleanup();
+  }
+}
+
+/** Restore one durable Run projection, including its compact event list. */
+export async function getAgentRun(
+  runId: string,
+  signal?: AbortSignal,
+): Promise<AgentJournalRun> {
+  const base = getAgentBaseUrl();
+  const { controller, cleanup, timedOut } = createRequestController(signal, 10_000);
+  try {
+    const response = await fetch(`${base}/api/agent/runs/${encodeURIComponent(runId)}`, {
+      method: "GET",
+      headers: await withTokenHeaders({ Accept: "application/json" }),
+      signal: controller.signal,
+    });
+    const raw = await parseJsonSafe(response);
+    if (!response.ok) {
+      const message = raw && typeof raw === "object" && "error" in raw
+        ? String((raw as Record<string, unknown>).error)
+        : `Run request failed (${response.status})`;
+      throw new AgentServiceError(message, response.status);
+    }
+    const run = raw && typeof raw === "object" ? (raw as Record<string, unknown>).run : null;
+    if (!run || typeof run !== "object" || Array.isArray(run) || typeof (run as Record<string, unknown>).run_id !== "string") {
+      throw new AgentServiceError("Run request returned malformed data");
+    }
+    return run as AgentJournalRun;
+  } catch (err) {
+    if (timedOut()) throw new AgentServiceError("Run request timed out");
+    if (err instanceof AgentServiceError) throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new AgentServiceError("Run request failed");
+  } finally {
+    cleanup();
+  }
+}
+
+/** Read an artifact with a bounded preview by default. */
+export async function getAgentArtifact(
+  runId: string,
+  artifactId: string,
+  options: { preview?: boolean; maxBytes?: number; signal?: AbortSignal } = {},
+): Promise<AgentArtifactRead> {
+  const base = getAgentBaseUrl();
+  const maxBytes = Math.max(1_024, Math.min(8_000_000, Math.floor(options.maxBytes ?? 32_768)));
+  const query = new URLSearchParams({ preview: options.preview === false ? "0" : "1", maxBytes: String(maxBytes) });
+  const { controller, cleanup, timedOut } = createRequestController(options.signal, 15_000);
+  try {
+    const response = await fetch(`${base}/api/agent/runs/${encodeURIComponent(runId)}/artifacts/${encodeURIComponent(artifactId)}?${query}`, {
+      method: "GET",
+      headers: await withTokenHeaders({ Accept: "application/json" }),
+      signal: controller.signal,
+    });
+    const raw = await parseJsonSafe(response);
+    if (!response.ok) {
+      const message = raw && typeof raw === "object" && "error" in raw
+        ? String((raw as Record<string, unknown>).error)
+        : `Artifact request failed (${response.status})`;
+      throw new AgentServiceError(message, response.status);
+    }
+    const artifact = raw && typeof raw === "object" ? (raw as Record<string, unknown>).artifact : null;
+    if (!artifact || typeof artifact !== "object" || Array.isArray(artifact) || typeof (artifact as Record<string, unknown>).artifact_id !== "string") {
+      throw new AgentServiceError("Artifact request returned malformed data");
+    }
+    return artifact as AgentArtifactRead;
+  } catch (err) {
+    if (timedOut()) throw new AgentServiceError("Artifact request timed out");
+    if (err instanceof AgentServiceError) throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new AgentServiceError("Artifact request failed");
   } finally {
     cleanup();
   }

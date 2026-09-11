@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
-import Copy from "@mui/icons-material/ContentCopyRounded";
-import FilePlus2 from "@mui/icons-material/NoteAddRounded";
-import MousePointer2 from "@mui/icons-material/AdsClickRounded";
-import Scissors from "@mui/icons-material/ContentCutRounded";
-import Tag from "@mui/icons-material/LocalOfferRounded";
-import TestTube2 from "@mui/icons-material/BiotechRounded";
-import X from "@mui/icons-material/CloseRounded";
+import { ChevronDown, Circle, Columns2, Copy, FilePlus2, History, List, MousePointer2, Tag, TestTube2, TextSelect, X } from "lucide-react";
 import {
   actions,
   createVectorEditor,
@@ -178,11 +172,11 @@ const ENZYME_MODE_OPTIONS: Array<{ value: EnzymeMode; label: string }> = [
 ];
 
 const TRANSLATION_MODE_OPTIONS: Array<{ value: TranslationMode; label: string }> = [
-  { value: "cds", label: "CDS features" },
-  { value: "off", label: "Hidden" },
-  { value: "frame1", label: "+1 reading frame" },
-  { value: "forward", label: "Forward 3 frames" },
-  { value: "six", label: "Six reading frames" },
+  { value: "cds", label: "CDS 翻译" },
+  { value: "off", label: "隐藏翻译" },
+  { value: "frame1", label: "+1 阅读框" },
+  { value: "forward", label: "正向 3 阅读框" },
+  { value: "six", label: "全部 6 阅读框" },
 ];
 
 const EMPTY_FRAME_TRANSLATIONS = {
@@ -723,6 +717,7 @@ export default function OveEditorHost({
   const [alignError, setAlignError] = useState<string | null>(null);
   const [showDescription, setShowDescription] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
+  const nativeToolbarRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<OveEditorInstance | null>(null);
   const commandBridgeInstanceRef = useRef<OveCommandBridge | null>(null);
   const docRef = useRef(doc);
@@ -833,6 +828,9 @@ export default function OveEditorHost({
       // or the History panel and Cmd+Z would diverge again. Undo/Redo live in
       // the app toolbar and the mod+z/mod+shift+z hotkey handler below.
       ToolBarProps: {
+        // Keep engine controls in the app's real toolbar flow. React's portal
+        // preserves editor context without negative offsets over the canvas.
+        portalTarget: nativeToolbarRef.current,
         toolList: [
           "cutsiteTool",
           "featureTool",
@@ -903,6 +901,7 @@ export default function OveEditorHost({
         onSaveErrorRef.current(["The local OVE fork does not expose editor.getStore()."]);
       } else {
         const bridgeOptions: OveCommandBridgeOptions = {
+          getCanonicalDocument: () => docRef.current,
           // The bridge reads this adapter from the fork's isolated Redux store.
           // It intentionally does not call the legacy editor.getState() method.
           editor: {
@@ -1346,7 +1345,7 @@ export default function OveEditorHost({
           onManage={openManageEnzymes}
         />
         <label className="ove-translation-filter">
-          <span>AA</span>
+          <span aria-hidden="true">Aa</span>
           <select
             aria-label="氨基酸翻译"
             value={translationMode}
@@ -1357,6 +1356,7 @@ export default function OveEditorHost({
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
+          <ChevronDown aria-hidden="true" />
         </label>
         <div className="ove-sim-tools" role="group" aria-label="模拟工具">
           <button
@@ -1392,11 +1392,23 @@ export default function OveEditorHost({
             <span>比对</span>
           </button>
         </div>
-        {selection && selection.length > 0 && (
+        <div ref={nativeToolbarRef} className="ove-native-tools" role="group" aria-label="画布工具" />
+        {selection && selection.length > 0 ? (
           <div className="ove-selection-actions" aria-label="选区操作">
             <span className="ove-selection-actions__summary">
               已选 {selection.length.toLocaleString()} bp
             </span>
+            {onOpenPanel && (
+              <button
+                type="button"
+                className="ove-selection-action"
+                onClick={() => onOpenPanel("inspector")}
+                title="检查选区的序列与注释"
+              >
+                <TextSelect aria-hidden="true" />
+                <span>检查选区</span>
+              </button>
+            )}
             <button
               type="button"
               className="ove-selection-action"
@@ -1444,6 +1456,10 @@ export default function OveEditorHost({
             >
               <X aria-hidden="true" />
             </button>
+          </div>
+        ) : (
+          <div className="ove-selection-actions ove-selection-actions--empty" aria-label="序列操作提示">
+            拖选序列以添加特征或引物，双击特征进行编辑
           </div>
         )}
       </div>
@@ -1511,7 +1527,7 @@ export default function OveEditorHost({
               handleClearSelection();
             }}
           >
-            <Scissors aria-hidden="true" />
+            <X aria-hidden="true" />
           </button>
         </aside>          <div className="ove-editor-canvas">
           <div className="ove-feature-overview" aria-label="特征总览">
@@ -1681,7 +1697,7 @@ export default function OveEditorHost({
               title="图谱视图"
               onClick={() => changeViewMode("map")}
             >
-              <span>图谱</span>
+              <Circle aria-hidden="true" /><span>图谱</span>
             </button>
             <button
               type="button"
@@ -1691,7 +1707,7 @@ export default function OveEditorHost({
               title="序列视图"
               onClick={() => changeViewMode("sequence")}
             >
-              <span>序列</span>
+              <TextSelect aria-hidden="true" /><span>序列</span>
             </button>
             <button
               type="button"
@@ -1701,7 +1717,7 @@ export default function OveEditorHost({
               title="图谱与序列"
               onClick={() => changeViewMode("split")}
             >
-              <span>双视图</span>
+              <Columns2 aria-hidden="true" /><span>双视图</span>
             </button>
           </div>
           <div className="ove-view-footer__panels" role="group" aria-label="侧栏面板">
@@ -1712,7 +1728,7 @@ export default function OveEditorHost({
               title="打开特征列表"
               onClick={() => onOpenPanel?.("annotations")}
             >
-              <span>特征</span>
+              <List aria-hidden="true" /><span>特征</span>
             </button>
             <button
               type="button"
@@ -1721,7 +1737,7 @@ export default function OveEditorHost({
               title="打开编辑历史"
               onClick={() => onOpenPanel?.("history")}
             >
-              <span>历史</span>
+              <History aria-hidden="true" /><span>历史</span>
             </button>
           </div>
         </div>

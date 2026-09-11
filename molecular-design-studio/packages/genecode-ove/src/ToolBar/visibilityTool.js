@@ -1,4 +1,5 @@
-import { Icon, Menu } from "@blueprintjs/core";
+import { Menu } from "@blueprintjs/core";
+import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 import { createCommandMenu } from "@teselagen/ui";
 import viewSubmenu from "../MenuBar/viewSubmenu";
@@ -15,7 +16,7 @@ export default connectToEditor(({ toolBar = {} }) => {
   return (
     <ToolbarItem
       {...{
-        Icon: <Icon icon="eye-open" />,
+        Icon: <SlidersHorizontal aria-hidden="true" />,
         onIconClick: "toggleDropdown",
         Dropdown: VisibilityOptions,
         noDropdownIcon: true,

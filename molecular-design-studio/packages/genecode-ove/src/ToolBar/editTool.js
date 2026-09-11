@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Icon } from "@blueprintjs/core";
+import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import ToolbarItem from "./ToolbarItem";
 import { connectToEditor } from "../withEditorProps";
 
@@ -22,7 +22,7 @@ export default connectToEditor(editorState => {
     <ToolbarItem
       {...{
         disabled: isLoading || disableSetReadOnly,
-        Icon: <Icon icon={readOnly ? "lock" : "unlock"} />,
+        Icon: readOnly ? <LockKeyhole aria-hidden="true" /> : <LockKeyholeOpen aria-hidden="true" />,
         onIconClick: () =>
           handleReadOnlyChange(!readOnly, { ...props, setIsLoading }),
         tooltip: readOnlyTooltip({ readOnly, disableSetReadOnly }),

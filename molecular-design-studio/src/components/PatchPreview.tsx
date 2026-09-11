@@ -203,6 +203,7 @@ function PatchPreviewPanel({
       )}
 
       {preview.operations.length > 0 && (
+        <div className="patch-preview__table-scroll" role="region" aria-label="修改操作明细，可横向滚动" tabIndex={0}>
         <table className="patch-preview__ops">
           <thead>
             <tr>
@@ -243,6 +244,7 @@ function PatchPreviewPanel({
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {preview.affectedFeatures.length > 0 && (

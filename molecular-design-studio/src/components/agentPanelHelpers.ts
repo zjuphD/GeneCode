@@ -47,7 +47,7 @@ export const AGENT_MODE_OPTIONS: Array<{ id: AgentMode; label: string; icon: str
 export const MODE_PLACEHOLDERS: Record<AgentMode, string> = {
   review: "让我审阅引物、sgRNA、突变或当前的克隆计划…",
   plan: "告诉我你想设计什么，我会先创建计划…",
-  auto: "提出设计或分析需求。我会自动规划、执行，并将序列修改应用到新副本——无需确认…",
+  auto: "描述设计目标，或接着问一个问题…",
 };
 
 export interface TaskStarter {

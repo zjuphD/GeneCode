@@ -1,30 +1,52 @@
 import { getOverlapsOfPotentiallyCircularRanges } from "@teselagen/range-utils";
 
-export const SEQUENCE_PANEL_LAYOUT_VERSION = "p0.2";
+export const SEQUENCE_PANEL_LAYOUT_VERSION = "p0.3";
 
 export const DEFAULT_LAYOUT_OPTIONS = Object.freeze({
   charWidth: 11,
   leftGutter: 42,
   rightGutter: 44,
-  rowPaddingTop: 8,
-  rowPaddingBottom: 16,
-  labelLaneHeight: 22,
+  rowPaddingTop: 18,
+  rowPaddingBottom: 28,
+  labelLaneHeight: 20,
   featureLaneHeight: 18,
-  primerLaneHeight: 18,
+  primerLaneHeight: 32,
   sequenceHeight: 20,
   axisHeight: 18,
   translationHeight: 20,
   laneGap: 4,
-  maxLabelLanes: 4,
+  maxLabelLanes: 5,
   maxLabelsPerRow: 24
 });
 
-// Sequence labels are rendered with a 10px monospace font while bases use
-// `charWidth` (normally 11px).  A lane must reserve the label's visual width,
-// not only the annotated recognition range; otherwise nearby but distinct
-// enzymes (for example `SacI +1` and `EcoRI +1`) still collide horizontally.
-const LABEL_GLYPH_WIDTH_PX = 6.1;
-const LABEL_HORIZONTAL_PADDING_PX = 4;
+// Labels use an 11px UI font while bases use the fixed `charWidth` grid.
+// Reserve the full badge footprint rather than the recognition range.
+const LABEL_GLYPH_WIDTH_PX = 7;
+const LABEL_HORIZONTAL_PADDING_PX = 18;
+
+// Use conservative glyph widths for deterministic layout without measuring a
+// mounted canvas. Full names remain in accessible titles when space is short.
+export function fitAnnotationLabel(value, availableWidth, glyphWidth = 7) {
+  const text = String(value || "");
+  const widthOf = char => /[^\u0000-\u00ff]/.test(char) ? glyphWidth * 2 : glyphWidth;
+  const chars = Array.from(text);
+  if (chars.reduce((sum, char) => sum + widthOf(char), 0) <= availableWidth) return text;
+  if (availableWidth < glyphWidth * 3) return "";
+  let result = "";
+  let used = glyphWidth * 2;
+  for (const char of chars) {
+    used += widthOf(char);
+    if (used > availableWidth) break;
+    result += char;
+  }
+  return `${result}…`;
+}
+
+export function hasAnnotationArrowhead(item) {
+  return item.annotation?.forward === false
+    ? item.start === item.sourceStart
+    : item.end === item.sourceEnd;
+}
 
 const FEATURE_TYPES = [
   "parts",
@@ -90,6 +112,13 @@ export function getCutsiteBottomPosition(item, row) {
     return candidate >= row.start && candidate <= row.end + 1 ? candidate : null;
   }
   return topPosition;
+}
+
+export function getCutsiteGroupKey(item, row) {
+  const annotation = getItemAnnotation(item);
+  const top = annotation.topSnipPosition ?? getCutsitePosition(item, row);
+  const bottom = annotation.bottomSnipPosition ?? top;
+  return `${top}:${bottom}`;
 }
 
 export function getRowLength(row) {
@@ -184,6 +213,14 @@ function sortItems(items) {
   });
 }
 
+function prioritizeCutsiteNames(items, preferredNames = []) {
+  const ranks = new Map(preferredNames.map((name, index) => [name, index]));
+  const rank = item => ranks.get(getAnnotationLabel(item)) ?? preferredNames.length;
+  // Stable ordering keeps existing representatives when no preferred name
+  // is present. Use the host's enzyme group instead of a second name catalog.
+  return [...items].sort((left, right) => rank(left) - rank(right));
+}
+
 /**
  * Reuses OVE's yOffset when present, then deterministically fills any gaps.
  * It assigns lanes independently for each track group so rows never overlap.
@@ -276,11 +313,15 @@ function getLabelExtent(item, row, charWidth) {
   const text = String(item.label || "");
   const widthPx = Math.max(
     LABEL_GLYPH_WIDTH_PX,
-    text.length * LABEL_GLYPH_WIDTH_PX + LABEL_HORIZONTAL_PADDING_PX
+    Array.from(text).reduce((sum, char) => sum + (/[^\u0000-\u00ff]/.test(char) ? 2 : 1), 0)
+      * LABEL_GLYPH_WIDTH_PX + LABEL_HORIZONTAL_PADDING_PX
   );
-  const halfSpan = widthPx / Math.max(1, charWidth) / 2;
+  const halfSpan = Math.min(getRowLength(row), widthPx / Math.max(1, charWidth)) / 2;
   const anchor = getLabelAnchor(item, row);
-  return { start: anchor - halfSpan, end: anchor + halfSpan };
+  // Labels at either row edge move inward; the connector still points to the
+  // exact cut boundary. Collision lanes reserve that clamped footprint.
+  const center = Math.max(row.start + halfSpan, Math.min(row.end + 1 - halfSpan, anchor));
+  return { start: center - halfSpan, end: center + halfSpan };
 }
 
 /**
@@ -299,31 +340,24 @@ export function assignLabelLanes(items, row, options = DEFAULT_LAYOUT_OPTIONS) {
   const laneEnds = [];
   return sorted.map(item => {
     const extent = getLabelExtent(item, row, options.charWidth);
-    const requestedLane = Number.isInteger(item.yOffset) && item.yOffset >= 0
-      ? item.yOffset
-      : -1;
-    let lane = requestedLane;
-    if (lane < 0 || laneEnds[lane] >= extent.start) {
-      lane = laneEnds.findIndex(lastEnd => lastEnd < extent.start);
-      if (lane < 0) lane = laneEnds.length;
-    }
+    // Feature-engine yOffset describes sequence ranges, not label widths.
+    // Repack labels from scratch to avoid arbitrary tall gaps.
+    let lane = laneEnds.findIndex(lastEnd => lastEnd + 0.6 < extent.start);
+    if (lane < 0) lane = laneEnds.length;
     laneEnds[lane] = extent.end;
     return { ...item, lane, labelExtent: extent };
   });
 }
 
-// Feature and part names are not painted at the start of every sequence row:
-// the colored feature arrows already carry the identity, and SnapGene keeps
-// row-leading labels to cut sites and primers. Cutsite (incl. merged
-// isoschizomer) and primer labels stay; features/parts can be re-enabled via
-// annotationLabelVisibility.
-const ROW_START_LABEL_TYPES = ["primers", "cutsites"];
+// Feature and primer tracks carry their own names. Only restriction labels
+// need independent collision lanes above the double-stranded sequence.
+const ROW_START_LABEL_TYPES = ["cutsites"];
 
 function makeLabelItems(row, sequenceLength, props, visibility, options) {
   const sources = [
     ...ROW_START_LABEL_TYPES.map(type => [type, row[type]])
   ];
-  const labels = sources.flatMap(([type, values]) => {
+  const labels = prioritizeCutsiteNames(sources.flatMap(([type, values]) => {
     if (!isLabelVisible(type, props, visibility)) return [];
     return normalizeItems(values, row, sequenceLength, type)
       .map(item => ({
@@ -332,17 +366,13 @@ function makeLabelItems(row, sequenceLength, props, visibility, options) {
         label: getAnnotationLabel(item, type === "cutsites" ? "Cut site" : "Untitled")
       }))
       .filter(item => type !== "cutsites" || getCutsitePosition(item, row) !== null);
-  });
-  // Collapse cut sites by their resolved cut position: isoschizomers that cut
-  // the same spot (up to a dozen enzymes) merge into a single label so the
-  // label lane doesn't waste rows on stacked duplicates. SnapGene shows the
-  // first enzyme name plus a "+N" count of additional isoschizomers (e.g.
-  // "VpaKutJI +4"); we also keep the full enzyme list on the label item so a
-  // double-click can open a dialog listing every enzyme at that position.
+  }), props.preferredEnzymeNames);
+  // Group only identical top AND bottom cut boundaries. The same top cut
+  // alone is insufficient: the two enzymes can expose different ends.
   const cutsiteByPosition = new Map();
   const deduped = labels.filter(item => {
     if (item.labelType !== "cutsites") return true;
-    const position = getCutsitePosition(item, row);
+    const position = getCutsiteGroupKey(item, row);
     const group = cutsiteByPosition.get(position);
     if (group) {
       group.items.push(item);
@@ -363,16 +393,16 @@ function makeLabelItems(row, sequenceLength, props, visibility, options) {
     // Guard on the deduped name list so two same-name cutsites at one
     // position can never render a degenerate "+0" suffix.
     if (enzymeNames.length < 2) continue;
-    representative.label = `${enzymeNames[0]} +${enzymeNames.length - 1}`;
+    representative.label = `${enzymeNames[0]} · ${enzymeNames.length}酶`;
     representative.annotation = {
       ...representative.annotation,
       isoschizomerNames: enzymeNames
     };
   }
   const sorted = sortItems(deduped);
-  const visible = sorted.slice(0, options.maxLabelsPerRow);
+  const visible = props.labelsExpanded ? sorted : sorted.slice(0, options.maxLabelsPerRow);
   const laneItems = assignLabelLanes(visible, row, options)
-    .filter(item => item.lane < options.maxLabelLanes);
+    .filter(item => props.labelsExpanded || item.lane < options.maxLabelLanes);
   const hiddenCount = sorted.length - laneItems.length;
   return { items: laneItems, hiddenCount };
 }
@@ -429,34 +459,11 @@ export function buildRowLayout(row, props = {}) {
       )
     : [];
   const cutsiteItems = isVisible("cutsites", annotationVisibility)
-    ? normalizeItems(row?.cutsites, row, sequenceLength, "cutsites")
-        .filter(item => getCutsitePosition(item, row) !== null)
+    ? prioritizeCutsiteNames(normalizeItems(row?.cutsites, row, sequenceLength, "cutsites")
+        .filter(item => getCutsitePosition(item, row) !== null), props.preferredEnzymeNames)
     : [];
   const labels = makeLabelItems(row, sequenceLength, props, annotationVisibility, options);
 
-  if (labels.items.length || labels.hiddenCount) {
-    y = addTrack(
-      tracks,
-      makeLaneTrack("labels", labels.items, options.labelLaneHeight, options, {
-        kind: "labels",
-        hiddenCount: labels.hiddenCount,
-        preserveLanes: true
-      }),
-      y,
-      options
-    );
-  }
-  if (forwardFeatures.length) {
-    y = addTrack(
-      tracks,
-      makeLaneTrack("features-forward", forwardFeatures, options.featureLaneHeight, options, {
-        kind: "features",
-        direction: "forward"
-      }),
-      y,
-      options
-    );
-  }
   if (forwardPrimers.length) {
     y = addTrack(
       tracks,
@@ -467,6 +474,18 @@ export function buildRowLayout(row, props = {}) {
       y,
       options
     );
+  }
+  // Labels and primers sit above DNA; features sit below both strands. This
+  // makes the double-stranded sequence the visual anchor of each row.
+  if (labels.items.length || labels.hiddenCount) {
+    y = addTrack(tracks, makeLaneTrack("labels", labels.items, options.labelLaneHeight, options, {
+      kind: "labels",
+      hiddenCount: labels.hiddenCount,
+      expanded: Boolean(props.labelsExpanded),
+      height: Math.max(1, getLaneCount(labels.items)) * options.labelLaneHeight
+        + (labels.hiddenCount || props.labelsExpanded ? 26 : 0),
+      preserveLanes: true
+    }), y, options);
   }
   if (isVisible("sequence", annotationVisibility)) {
     y = addTrack(
@@ -515,11 +534,12 @@ export function buildRowLayout(row, props = {}) {
       options
     );
   }
-  if (translationItems.length) {
+  if (forwardFeatures.length) {
     y = addTrack(
       tracks,
-      makeLaneTrack("translations", translationItems, options.translationHeight, options, {
-        kind: "translations"
+      makeLaneTrack("features-forward", forwardFeatures, options.featureLaneHeight, options, {
+        kind: "features",
+        direction: "forward"
       }),
       y,
       options
@@ -542,6 +562,16 @@ export function buildRowLayout(row, props = {}) {
       makeLaneTrack("features-reverse", reverseFeatures, options.featureLaneHeight, options, {
         kind: "features",
         direction: "reverse"
+      }),
+      y,
+      options
+    );
+  }
+  if (translationItems.length) {
+    y = addTrack(
+      tracks,
+      makeLaneTrack("translations", translationItems, options.translationHeight, options, {
+        kind: "translations"
       }),
       y,
       options

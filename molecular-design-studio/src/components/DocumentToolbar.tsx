@@ -1,19 +1,11 @@
 /**
  * File-level commands and current document status.
  *
- * SnapGene-style command bar: icon-above-label buttons in groups, with the
- * molecule summary (length, topology, features) on the right.
+ * Compact workbench commands, using the same icon system as Agent.
  */
 
 import { Chip, Tooltip } from "@mui/material";
-import FilePlus2 from "@mui/icons-material/NoteAddRounded";
-import FolderOpen from "@mui/icons-material/FolderOpenRounded";
-import Import from "@mui/icons-material/UploadFileRounded";
-import Redo2 from "@mui/icons-material/RedoRounded";
-import Save from "@mui/icons-material/SaveRounded";
-import SaveAll from "@mui/icons-material/SaveAsRounded";
-import TriangleAlert from "@mui/icons-material/WarningAmberRounded";
-import Undo2 from "@mui/icons-material/UndoRounded";
+import { FilePlus2, FolderOpen, Import, Redo2, Save, SaveAll, TriangleAlert, Undo2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { MOD_KEY } from "./documentShortcuts";
 
@@ -139,7 +131,7 @@ function DocumentToolbar({
       <div className="doc-toolbar__group">
         <button
           type="button"
-          className="doc-toolbar__btn"
+          className="doc-toolbar__btn doc-toolbar__btn--save"
           onClick={onSave}
           title={`保存文件 (${MOD_KEY}+S)`}
           aria-label={`保存文件 (${MOD_KEY}+S)`}

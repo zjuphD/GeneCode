@@ -17,8 +17,17 @@ tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-updater = "2"
+window-vibrancy = "0.5"
 keyring = "4.1.5"
 getrandom = "0.2"
+
+# macOS transparent windows require the private API (drawsBackground via
+# `wry/transparent`); without it the WKWebView paints opaque and the glass
+# theme's vibrancy layer is never visible. Safely gated to macOS at compile
+# time, so enabled by default to keep `tauri dev`/`tauri build` in step.
+[features]
+default = ["macos-private-api"]
+macos-private-api = ["tauri/macos-private-api"]
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

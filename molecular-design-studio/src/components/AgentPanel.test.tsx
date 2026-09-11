@@ -218,6 +218,7 @@ describe("AgentPanel", () => {
     vi.mocked(readSequenceFile).mockReset();
     vi.mocked(parseSequenceFile).mockReset();
     window.localStorage.removeItem("genecode-agent-panel-width");
+    window.localStorage.removeItem("genecode-agent-focus");
     setClipboard(vi.fn().mockResolvedValue(undefined));
   });
 
@@ -235,10 +236,10 @@ describe("AgentPanel", () => {
   it("shows GeneCode Agent identity and document context in task stream", () => {
     render(<AgentPanel {...defaultProps()} />);
     expect(screen.getByText("GeneCode Agent")).toBeDefined();
-    expect(screen.getByText("序列信息")).toBeDefined();
+    expect(screen.getByLabelText("序列信息")).toBeDefined();
     expect(screen.getByText(/test_seq/)).toBeDefined();
     expect(screen.getByText(/16 bp/)).toBeDefined();
-    expect(screen.getByText(/Linear/)).toBeDefined();
+    expect(screen.getByText(/线性/)).toBeDefined();
   });
 
   it("offers to continue a saved conversation instead of only showing its transcript", () => {
@@ -326,7 +327,7 @@ describe("AgentPanel", () => {
     fireEvent.change(screen.getByLabelText("表达策略"), {
       target: { value: "fusion" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "已填 1 项" }));
+    fireEvent.click(screen.getByRole("button", { name: "提交参数（1 项）" }));
 
     expect(mockSession.sendMessage).toHaveBeenCalledWith(
       "Continue the current molecular design task with these structured inputs.",
@@ -349,10 +350,10 @@ describe("AgentPanel", () => {
     };
     render(<AgentPanel {...defaultProps()} selection={selection} />);
     // One-based display: 11–21
-    expect(screen.getByText(/Selection 11–21/)).toBeDefined();
+    expect(screen.getByText(/选区 11–21/)).toBeDefined();
     expect(screen.getByText(/11 bp/)).toBeDefined();
-    // Should NOT show wraps origin
-    expect(screen.queryByText(/wraps origin/)).toBeNull();
+    // Should NOT show an origin-spanning marker
+    expect(screen.queryByText(/跨越起点/)).toBeNull();
     // Should NOT render raw sequence
     expect(screen.queryByText("ATCGATCGATC")).toBeNull();
   });
@@ -367,24 +368,24 @@ describe("AgentPanel", () => {
     };
     render(<AgentPanel {...defaultProps()} selection={selection} />);
     // Wrapped: show 13–16 / 1–4 (one-based)
-    expect(screen.getByText(/Selection 13–16 \/ 1–4/)).toBeDefined();
+    expect(screen.getByText(/选区 13–16 \/ 1–4/)).toBeDefined();
     expect(screen.getByText(/8 bp/)).toBeDefined();
-    expect(screen.getByText(/wraps origin/)).toBeDefined();
+    expect(screen.getByText(/跨越起点/)).toBeDefined();
     // Should NOT render raw sequence
     expect(screen.queryByText("ATCGATCG")).toBeNull();
   });
 
   it("shows one unified Agent entry with example tasks", () => {
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByRole("heading", { name: "你好，chen" })).toBeDefined();
-    expect(screen.getByText(/虚拟分子生物学协作者/)).toBeDefined();
-    expect(screen.getByText("新建分子设计")).toBeDefined();
-    expect(screen.getByText("示例任务")).toBeDefined();
-    expect(screen.getByText("将插入片段克隆到载体")).toBeDefined();
-    expect(screen.getByText("设计 RT-qPCR 引物")).toBeDefined();
-    expect(screen.getByText("设计 KO sgRNA")).toBeDefined();
-    expect(screen.getByText("设计 siRNA 双链体")).toBeDefined();
-    expect(screen.getByText("DNA 点突变引物")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "从一个想法，到下一步设计。" })).toBeDefined();
+    expect(screen.getByText("描述你的目标，或从下方选择一个任务。")).toBeDefined();
+    expect(screen.getByLabelText("新建分子设计")).toBeDefined();
+    expect(screen.getByText("序列在手，想法开始。")).toBeDefined();
+    expect(screen.getByRole("button", { name: "将插入片段克隆到载体" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "设计 RT-qPCR 引物" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "设计 KO sgRNA" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "设计 siRNA 双链体" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "DNA 点突变引物" })).toBeDefined();
     expect(screen.queryByLabelText("Agent workspace")).toBeNull();
   });
 
@@ -400,7 +401,7 @@ describe("AgentPanel", () => {
     ];
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("新建分子设计")).toBeDefined();
+    expect(screen.getByLabelText("新建分子设计")).toBeDefined();
     expect(screen.queryByText("Planning")).toBeNull();
     expect(screen.queryByText("[Context changed — prior plan and draft cleared]")).toBeNull();
   });
@@ -419,15 +420,15 @@ describe("AgentPanel", () => {
 
   it("shows No document state when doc is null", () => {
     render(<AgentPanel {...defaultProps()} doc={null} />);
-    expect(screen.getByText("无文档")).toBeDefined();
-    expect(screen.getByText("打开序列文件以开始")).toBeDefined();
+    expect(screen.getByText(/无文档/)).toBeDefined();
+    expect(screen.getByText(/可直接描述目标或添加序列文件/)).toBeDefined();
     expect(screen.queryByText("Clone insert into vector")).toBeNull();
     expect(screen.queryByText("New molecular design")).toBeNull();
   });
 
   it("pins the starter workspace so snapshot slots match the task", () => {
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("将插入片段克隆到载体"));
+    fireEvent.click(screen.getByRole("button", { name: "将插入片段克隆到载体" }));
     expect(mockSession.sendMessage).toHaveBeenCalledTimes(1);
     expect(mockSession.sendMessage.mock.calls[0]![0]).toContain("clone an insert");
     expect(mockSession.sendMessage.mock.calls[0]![1]).toEqual(makeDoc());
@@ -454,7 +455,7 @@ describe("AgentPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("将插入片段克隆到载体"));
+    fireEvent.click(screen.getByRole("button", { name: "将插入片段克隆到载体" }));
 
     expect(mockSession.sendMessage.mock.calls[0]?.[1]).toEqual(liveDocument);
     expect(mockSession.sendMessage.mock.calls[0]?.[3]).toEqual(liveSelection);
@@ -473,7 +474,7 @@ describe("AgentPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("将插入片段克隆到载体"));
+    fireEvent.click(screen.getByRole("button", { name: "将插入片段克隆到载体" }));
 
     expect(mockSession.sendMessage.mock.calls[0]?.[3]).toEqual({
       start: 3,
@@ -487,7 +488,7 @@ describe("AgentPanel", () => {
 
   it("locks an RT-qPCR starter to the rtqpcr workspace", () => {
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("设计 RT-qPCR 引物"));
+    fireEvent.click(screen.getByRole("button", { name: "设计 RT-qPCR 引物" }));
     expect(mockSession.sendMessage).toHaveBeenCalledTimes(1);
     expect(mockSession.sendMessage.mock.calls[0]![2]).toBe("rtqpcr");
   });
@@ -498,7 +499,7 @@ describe("AgentPanel", () => {
     render(<AgentPanel {...defaultProps()} />);
     const taskType = screen.getByLabelText("检测到的任务类型");
     expect(taskType.textContent).toContain("RT-qPCR");
-    expect(taskType.textContent).toContain("自动检测");
+    expect(taskType.querySelector("select")).toBeNull();
   });
 
   it("uses the current goal to avoid showing a stale task type", () => {
@@ -514,7 +515,7 @@ describe("AgentPanel", () => {
     render(<AgentPanel {...defaultProps()} />);
     const input = screen.getByLabelText("Agent message input");
     fireEvent.change(input, { target: { value: "Design sgRNAs for this target" } });
-    fireEvent.click(screen.getByText("发送"));
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
     expect(mockSession.sendMessage).toHaveBeenCalledWith(
       "Design sgRNAs for this target",
       makeDoc(),
@@ -551,7 +552,7 @@ describe("AgentPanel", () => {
     fireEvent.change(screen.getByLabelText("Agent message input"), {
       target: { value: "Insert this after APOBEC3A" },
     });
-    fireEvent.click(screen.getByText("发送"));
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
 
     expect(mockSession.sendMessage).toHaveBeenCalledWith(
       "Insert this after APOBEC3A",
@@ -590,7 +591,7 @@ describe("AgentPanel", () => {
     fireEvent.click(screen.getByLabelText("Attach sequence file"));
     await waitFor(() => expect(screen.getByText("EGFP")).toBeDefined());
 
-    fireEvent.click(screen.getByText("将插入片段克隆到载体"));
+    fireEvent.click(screen.getByRole("button", { name: "将插入片段克隆到载体" }));
 
     expect(mockSession.sendMessage).toHaveBeenCalledTimes(1);
     const call = mockSession.sendMessage.mock.calls[0]!;
@@ -803,9 +804,9 @@ describe("AgentPanel", () => {
       render(<AgentPanel {...defaultProps()} />);
 
       // The run was archived to a file and the notice explains where it went.
-      expect(screen.getByText("已自动归档")).toBeDefined();
-      expect(screen.getByText(/genecode-cloning-run-pure\.csv/)).toBeDefined();
-      expect(screen.getByText(/纯设计结果（无序列改动）/)).toBeDefined();
+      expect(screen.getByText("已归档，未改动序列")).toBeDefined();
+      expect(screen.getByTitle("genecode-cloning-run-pure.csv")).toBeDefined();
+      expect(screen.getByText(/未改动序列/)).toBeDefined();
       expect(download.createObjectURL).toHaveBeenCalledTimes(1);
       expect(download.anchorClick).toHaveBeenCalledTimes(1);
       // The exported blob is a real CSV with the candidate columns.
@@ -831,7 +832,7 @@ describe("AgentPanel", () => {
       // Candidate/marker refresh re-renders must not re-export the same run.
       rerender(<AgentPanel {...defaultProps()} />);
       expect(download.anchorClick).toHaveBeenCalledTimes(1);
-      expect(screen.getByText("已自动归档")).toBeDefined();
+      expect(screen.getByText("已归档，未改动序列")).toBeDefined();
     } finally {
       download.restore();
     }
@@ -1165,13 +1166,13 @@ describe("AgentPanel", () => {
 
   it("can collapse and expand", () => {
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("新建分子设计")).toBeDefined();
+    expect(screen.getByLabelText("新建分子设计")).toBeDefined();
 
     fireEvent.click(screen.getByTitle("Collapse"));
     expect(screen.queryByText("New molecular design")).toBeNull();
 
     fireEvent.click(screen.getByTitle("Expand"));
-    expect(screen.getByText("新建分子设计")).toBeDefined();
+    expect(screen.getByLabelText("新建分子设计")).toBeDefined();
   });
 
   // ── Service status ─────────────────────────────────────────
@@ -1225,6 +1226,15 @@ describe("AgentPanel", () => {
 
   // ── Conversation ───────────────────────────────────────────
 
+  it("does not label a ready plan as a completed design", () => {
+    mockSession.agentRun = { ...mockSession.agentRun, runId: "plan-only", status: "ready" };
+    mockSession.resultCount = 0;
+    mockSession.lastUserGoal = "Plan cloning";
+    render(<AgentPanel {...defaultProps()} />);
+    expect(screen.queryByText("结果就绪")).toBeNull();
+    expect(screen.queryByText("结果已生成")).toBeNull();
+  });
+
   it("renders conversation messages in planning node", () => {
     mockSession.messages = [
       { role: "user", content: "Design primers for my gene" },
@@ -1236,17 +1246,24 @@ describe("AgentPanel", () => {
   });
 
   it("reveals a newly-arrived Agent reply progressively", async () => {
-    mockSession.messages = [{ role: "user", content: "Design primers" }];
-    const view = render(<AgentPanel {...defaultProps()} />);
+    vi.useFakeTimers();
+    try {
+      mockSession.messages = [{ role: "user", content: "Design primers" }];
+      const view = render(<AgentPanel {...defaultProps()} />);
 
-    mockSession.messages = [
-      ...mockSession.messages,
-      { role: "assistant", content: "I found a suitable design and will explain the checks." },
-    ];
-    view.rerender(<AgentPanel {...defaultProps()} />);
+      mockSession.messages = [
+        ...mockSession.messages,
+        { role: "assistant", content: "I found a suitable design and will explain the checks." },
+      ];
+      view.rerender(<AgentPanel {...defaultProps()} />);
 
-    await waitFor(() => expect(document.querySelector(".agent-streaming-caret")).not.toBeNull());
-    await waitFor(() => expect(screen.getByText("I found a suitable design and will explain the checks.")).toBeDefined());
+      expect(document.querySelector(".agent-streaming-caret")).not.toBeNull();
+      await act(async () => { vi.advanceTimersByTime(1_000); });
+      expect(screen.getByText("I found a suitable design and will explain the checks.")).toBeDefined();
+      expect(document.querySelector(".agent-streaming-caret")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps the current conversation visible while older messages stay hidden", () => {
@@ -1263,8 +1280,8 @@ describe("AgentPanel", () => {
     expect(screen.queryByText("old message one")).toBeNull();
     expect(screen.getByText("recent message four")).toBeDefined();
     expect(screen.getByText("显示 2 条较早消息")).toBeDefined();
-    const conversation = screen.getByText("对话").closest("details") as HTMLDetailsElement;
-    expect(conversation.open).toBe(true);
+    const conversation = screen.getByRole("region", { name: "当前对话" });
+    expect(conversation.closest("details")).toBeNull();
     fireEvent.click(screen.getByText("显示 2 条较早消息"));
     expect(screen.getByText("old message one")).toBeDefined();
     expect(screen.getByText("隐藏较早消息")).toBeDefined();
@@ -1314,7 +1331,7 @@ describe("AgentPanel", () => {
     mockSession.draft = { type: "cloning", data: {} };
     mockSession.readyToExecute = true;
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("Confirm plan and generate preview")).toBeDefined();
+    expect(screen.getByText("确认计划并生成预览")).toBeDefined();
   });
 
   it("does not show Run design button when no draft", () => {
@@ -1323,7 +1340,7 @@ describe("AgentPanel", () => {
     ];
     mockSession.draft = null;
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.queryByText("Confirm plan and generate preview")).toBeNull();
+    expect(screen.queryByText("确认计划并生成预览")).toBeNull();
   });
 
   it("does not show Run design when readyToExecute is false even with draft", () => {
@@ -1333,7 +1350,7 @@ describe("AgentPanel", () => {
     mockSession.draft = { type: "cloning" };
     mockSession.readyToExecute = false;
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.queryByText("Confirm plan and generate preview")).toBeNull();
+    expect(screen.queryByText("确认计划并生成预览")).toBeNull();
   });
 
   it("calls executeDesign when Run design is clicked", () => {
@@ -1343,7 +1360,7 @@ describe("AgentPanel", () => {
     mockSession.draft = { type: "cloning" };
     mockSession.readyToExecute = true;
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("Confirm plan and generate preview"));
+    fireEvent.click(screen.getByText("确认计划并生成预览"));
     expect(mockSession.executeDesign).toHaveBeenCalledTimes(1);
     expect(mockSession.executeDesign.mock.calls[0]![1]).toBe("cloning");
   });
@@ -1356,7 +1373,7 @@ describe("AgentPanel", () => {
     mockSession.readyToExecute = true;
     mockSession.phase = "executing";
     render(<AgentPanel {...defaultProps()} />);
-    const btn = screen.getByText("Confirm plan and generate preview") as HTMLButtonElement;
+    const btn = screen.getByText("确认计划并生成预览") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
   });
 
@@ -1371,9 +1388,9 @@ describe("AgentPanel", () => {
     mockSession.readyToExecute = true;
     render(<AgentPanel {...defaultProps()} />);
     // No confirmation button — the plan auto-executes.
-    expect(screen.queryByText("Confirm plan and generate preview")).toBeNull();
+    expect(screen.queryByText("确认计划并生成预览")).toBeNull();
     expect(screen.queryByText("Confirm and run")).toBeNull();
-    expect(screen.getByText(/Auto 模式：计划已就绪，正在自动执行/)).toBeDefined();
+    expect(screen.getByText(/自动模式：计划已就绪，正在执行/)).toBeDefined();
     expect(mockSession.executeDesign).not.toHaveBeenCalled(); // hook owns execution
   });
 
@@ -1387,8 +1404,8 @@ describe("AgentPanel", () => {
     mockSession.error = "Execution failed";
     render(<AgentPanel {...defaultProps()} />);
     // Auto-execution failed; the user can retry manually.
-    expect(screen.queryByText(/Auto 模式：计划已就绪，正在自动执行/)).toBeNull();
-    fireEvent.click(screen.getByText("Retry run"));
+    expect(screen.queryByText(/自动模式：计划已就绪，正在执行/)).toBeNull();
+    fireEvent.click(screen.getByText("重试执行"));
     expect(mockSession.executeDesign).toHaveBeenCalledTimes(1);
     expect(mockSession.executeDesign.mock.calls[0]![1]).toBe("cloning");
   });
@@ -1400,7 +1417,7 @@ describe("AgentPanel", () => {
       { step: "1", tool: "primer3", status: "success", message: "Found 3 primers" },
     ];
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("Tool run")).toBeDefined();
+    expect(screen.getByText("工具执行")).toBeDefined();
     // Tool labels and messages also appear in the step DAG
     expect(screen.getAllByText("primer3").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Found 3 primers").length).toBeGreaterThan(0);
@@ -1527,13 +1544,13 @@ describe("AgentPanel", () => {
     expect(within(resultsNode as HTMLElement).getByText("Gibson Assembly")).toBeDefined();
     expect(within(resultsNode as HTMLElement).getByText("Recommended for this construct")).toBeDefined();
     expect(within(resultsNode as HTMLElement).getByText("High GC content in region")).toBeDefined();
-    expect(within(resultsNode as HTMLElement).getByText("Confidence: 85%")).toBeDefined();
+    expect(within(resultsNode as HTMLElement).getByText("推荐置信度 85%")).toBeDefined();
   });
 
   it("renders result count when present", () => {
     mockSession.resultCount = 5;
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("5 tool-generated candidate(s)")).toBeDefined();
+    expect(screen.getByText("共生成 5 个候选")).toBeDefined();
   });
 
   it("renders primer table and candidate metrics when present", () => {
@@ -1673,7 +1690,7 @@ describe("AgentPanel", () => {
 
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("sgRNA candidate")).toBeDefined();
+    expect(screen.getByText("sgRNA 候选")).toBeDefined();
     expect(screen.getByText("Guide")).toBeDefined();
     expect(screen.getByText("ATGCGATCGATCGATCG")).toBeDefined();
     expect(screen.getByText("PAM")).toBeDefined();
@@ -1714,7 +1731,7 @@ describe("AgentPanel", () => {
 
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("siRNA candidate")).toBeDefined();
+    expect(screen.getByText("siRNA 候选")).toBeDefined();
     expect(screen.getByText("Sense duplex")).toBeDefined();
     expect(screen.getByText("AUGCGAUCGAUCGdTdT")).toBeDefined();
     expect(screen.getByText("Antisense duplex")).toBeDefined();
@@ -1949,7 +1966,7 @@ describe("AgentPanel", () => {
     mockSession.agentRun = { runId: "run-456", status: "completed" };
 
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("Copy run note"));
+    fireEvent.click(screen.getByText("复制运行记录"));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const copied = writeText.mock.calls[0]![0] as string;
@@ -1970,7 +1987,7 @@ describe("AgentPanel", () => {
     mockSession.resultCount = 1;
 
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("Copy run note"));
+    fireEvent.click(screen.getByText("复制运行记录"));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const copied = writeText.mock.calls[0]![0] as string;
@@ -1989,13 +2006,13 @@ describe("AgentPanel", () => {
 
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("Copy run note")).toBeDefined();
+    expect(screen.getByText("复制运行记录")).toBeDefined();
   });
 
   it("does not show Copy run note when result area is empty", () => {
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.queryByText("Copy run note")).toBeNull();
+    expect(screen.queryByText("复制运行记录")).toBeNull();
   });
 
   // ── Copy action failure feedback ─────────────────────────────
@@ -2039,7 +2056,7 @@ describe("AgentPanel", () => {
 
 
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("Copy run note"));
+    fireEvent.click(screen.getByText("复制运行记录"));
 
     expect(await screen.findByText("复制失败")).toBeDefined();
   });
@@ -2069,7 +2086,58 @@ describe("AgentPanel", () => {
         "告诉我你想设计什么，我会先创建计划…",
       ),
     ).toBeDefined();
-    expect(screen.getByText("发送")).toBeDefined();
+    expect(screen.getByRole("button", { name: "发送消息" })).toBeDefined();
+  });
+
+  it("does not submit Enter while a Chinese input method is composing", () => {
+    render(<AgentPanel {...defaultProps()} />);
+    const input = screen.getByLabelText("Agent message input");
+    fireEvent.change(input, { target: { value: "设计引物" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(mockSession.sendMessage).not.toHaveBeenCalled();
+    expect((input as HTMLTextAreaElement).value).toBe("设计引物");
+    fireEvent.keyDown(input, { key: "Enter", isComposing: false });
+    expect(mockSession.sendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the sequence canvas from the composer context chip", () => {
+    const onOpenChange = vi.fn();
+    render(<AgentPanel {...defaultProps()} open onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByTitle("在序列工作区查看"));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("keeps conversation readable after a result arrives", () => {
+    mockSession.messages = [{ role: "user", content: "请检查序列" }, { role: "assistant", content: "已完成检查" }];
+    mockSession.resultCount = 1;
+    render(<AgentPanel {...defaultProps()} />);
+    const thread = screen.getByRole("region", { name: "当前对话" });
+    expect(thread.closest("details")).toBeNull();
+    expect(within(thread).getByText("已完成检查")).toBeDefined();
+  });
+
+  it("explains automatic changes without claiming they require confirmation", () => {
+    mockSession.agentMode = "auto";
+    render(<AgentPanel {...defaultProps()} />);
+    expect(screen.getByText("自动执行 · 序列修改另存为副本")).toBeDefined();
+    expect(screen.queryByText("先确认计划，再执行设计")).toBeNull();
+  });
+
+  it("consumes Escape in the mode menu instead of closing the entire workspace", () => {
+    render(<AgentPanel {...defaultProps()} />);
+    const shellKeydown = vi.fn();
+    window.addEventListener("keydown", shellKeydown);
+    try {
+      const trigger = screen.getByRole("button", { name: "Agent 权限模式：引导" });
+      fireEvent.click(trigger);
+      expect(screen.getByRole("menu", { name: "选择 Agent 模式" })).toBeDefined();
+      fireEvent.keyDown(trigger, { key: "Escape" });
+      expect(screen.queryByRole("menu", { name: "选择 Agent 模式" })).toBeNull();
+      expect(shellKeydown).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(trigger);
+    } finally {
+      window.removeEventListener("keydown", shellKeydown);
+    }
   });
 
   it("keeps composer actions inside the input field so the shortcut hint stays below", () => {
@@ -2077,7 +2145,7 @@ describe("AgentPanel", () => {
     const field = document.querySelector(".agent-composer__field");
     const input = screen.getByLabelText("Agent message input");
     const send = screen.getByRole("button", { name: "发送消息" });
-    const hint = screen.getByText("Enter 发送 · Shift+Enter 换行");
+    const hint = screen.getByText("先确认计划，再执行设计");
 
     expect(field).not.toBeNull();
     expect(field?.contains(input)).toBe(true);
@@ -2108,13 +2176,13 @@ describe("AgentPanel", () => {
     const input = screen.getByPlaceholderText(
       "告诉我你想设计什么，我会先创建计划…",
     ) as HTMLTextAreaElement;
-    const stopBtn = screen.getByText("停止") as HTMLButtonElement;
+    const stopBtn = screen.getByRole("button", { name: "停止 Agent" }) as HTMLButtonElement;
     expect(input.disabled).toBe(false);
     expect(stopBtn.disabled).toBe(false);
     expect(screen.getByText("思考中…")).toBeDefined();
     expect(screen.getByText("正在理解任务、读取序列并准备计划")).toBeDefined();
-    expect(screen.getByText("检测中…")).toBeDefined();
-    expect(screen.getByText("正在路由任务")).toBeDefined();
+    expect(screen.getByText("正在识别任务…")).toBeDefined();
+    expect(screen.getByLabelText("检测到的任务类型").textContent).toBe("正在识别任务…");
     fireEvent.click(stopBtn);
     expect(mockSession.cancelRequest).toHaveBeenCalledTimes(1);
   });
@@ -2127,7 +2195,7 @@ describe("AgentPanel", () => {
     render(<AgentPanel {...defaultProps()} />);
     expect(screen.getByText("运行工具…")).toBeDefined();
     expect(screen.getByText("正在运行 primer3")).toBeDefined();
-    expect(screen.getByText("停止")).toBeDefined();
+    expect(screen.getByRole("button", { name: "停止 Agent" })).toBeDefined();
   });
 
   it("treats remote validation as busy and makes it cancellable", () => {
@@ -2135,7 +2203,7 @@ describe("AgentPanel", () => {
     render(<AgentPanel {...defaultProps()} />);
     expect(screen.getByText("验证中…")).toBeDefined();
     expect(screen.getByText("正在检查外部数据库并复核候选结果")).toBeDefined();
-    fireEvent.click(screen.getByText("停止"));
+    fireEvent.click(screen.getByRole("button", { name: "停止 Agent" }));
     expect(mockSession.cancelRequest).toHaveBeenCalledTimes(1);
   });
 
@@ -2165,39 +2233,39 @@ describe("AgentPanel", () => {
       "告诉我你想设计什么，我会先创建计划…",
     );
     fireEvent.change(input, { target: { value: "Clone my gene" } });
-    fireEvent.click(screen.getByText("发送"));
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
     expect(mockSession.sendMessage).toHaveBeenCalledWith("Clone my gene", makeDoc(), undefined, null);
   });
 
   it("does not send empty message", () => {
     render(<AgentPanel {...defaultProps()} />);
-    fireEvent.click(screen.getByText("发送"));
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
     expect(mockSession.sendMessage).not.toHaveBeenCalled();
   });
 
   it("disables Send when input is empty", () => {
     render(<AgentPanel {...defaultProps()} />);
-    const sendBtn = screen.getByText("发送") as HTMLButtonElement;
+    const sendBtn = screen.getByRole("button", { name: "发送消息" }) as HTMLButtonElement;
     expect(sendBtn.disabled).toBe(true);
   });
 
-  it("renders textarea with three-row default size", () => {
+  it("renders textarea with compact two-row default size", () => {
     render(<AgentPanel {...defaultProps()} />);
     const input = screen.getByPlaceholderText(
       "告诉我你想设计什么，我会先创建计划…",
     ) as HTMLTextAreaElement;
-    expect(input.rows).toBe(3);
+    expect(input.rows).toBe(2);
   });
 
-  it("resets textarea to default three-row height after sending", () => {
+  it("resets textarea to default two-row height after sending", () => {
     render(<AgentPanel {...defaultProps()} />);
     const input = screen.getByPlaceholderText(
       "告诉我你想设计什么，我会先创建计划…",
     ) as HTMLTextAreaElement;
     fireEvent.change(input, { target: { value: "Design primers" } });
-    fireEvent.click(screen.getByText("发送"));
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
     expect(input.value).toBe("");
-    expect(input.style.height).toBe("96px");
+    expect(input.style.height).toBe("64px");
   });
 
   it("resets textarea to default height after Enter send", () => {
@@ -2208,7 +2276,7 @@ describe("AgentPanel", () => {
     fireEvent.change(input, { target: { value: "Design primers" } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(input.value).toBe("");
-    expect(input.style.height).toBe("96px");
+    expect(input.style.height).toBe("64px");
   });
 
   // ── Clear session ──────────────────────────────────────────
@@ -2330,7 +2398,7 @@ describe("AgentPanel", () => {
       { step: "1", tool: "primer3", status: "running", message: "Computing..." },
     ];
     render(<AgentPanel {...defaultProps()} />);
-    const toolNode = screen.getByText("Tool run").closest(".task-node");
+    const toolNode = screen.getByText("工具执行").closest(".task-node");
     expect(toolNode).not.toBeNull();
     expect(toolNode!.className).toContain("task-node--active");
   });
@@ -2339,10 +2407,10 @@ describe("AgentPanel", () => {
     mockSession.phase = "executing";
     mockSession.lastUserGoal = "Design primers";
     render(<AgentPanel {...defaultProps()} />);
-    const toolNode = screen.getByText("Tool run").closest(".task-node");
+    const toolNode = screen.getByText("工具执行").closest(".task-node");
     expect(toolNode).not.toBeNull();
     expect(toolNode!.className).toContain("task-node--active");
-    expect(screen.getByText("Running tools...")).toBeDefined();
+    expect(screen.getByText("正在执行工具…")).toBeDefined();
   });
 
   it("shows done planning node when all plan rows are done", () => {
@@ -2361,7 +2429,8 @@ describe("AgentPanel", () => {
       { label: "Analyze sequence", tool: "analyze", status: "done", summary: "Checked 3 features" },
     ];
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("analyze · Checked 3 features")).toBeDefined();
+    const plan = document.querySelector(".agent-plan-disclosure") as HTMLElement;
+    expect(within(plan).getByText("Checked 3 features")).toBeDefined();
   });
 
   it("treats unknown plan status as waiting", () => {
@@ -2379,7 +2448,7 @@ describe("AgentPanel", () => {
       { step: "1", tool: "tool", status: "unknown_status", message: "" },
     ];
     render(<AgentPanel {...defaultProps()} />);
-    const toolNode = screen.getByText("Tool run").closest(".task-node");
+    const toolNode = screen.getByText("工具执行").closest(".task-node");
     expect(toolNode).not.toBeNull();
     expect(toolNode!.className).toContain("task-node--waiting");
   });
@@ -2391,10 +2460,10 @@ describe("AgentPanel", () => {
     const panel = screen.getByText("GeneCode Agent").closest(".agent-panel")!;
     expect(panel.className).not.toContain("agent-panel--wide");
 
-    fireEvent.click(screen.getByLabelText("Wide view"));
+    fireEvent.click(screen.getByLabelText("专注对话"));
     expect(panel.className).toContain("agent-panel--wide");
 
-    fireEvent.click(screen.getByLabelText("Default view"));
+    fireEvent.click(screen.getByLabelText("序列并排"));
     expect(panel.className).not.toContain("agent-panel--wide");
   });
 
@@ -2409,14 +2478,30 @@ describe("AgentPanel", () => {
     fireEvent.mouseUp(document);
     expect(window.localStorage.getItem("genecode-agent-panel-width")).toBe("520");
 
-    fireEvent.click(screen.getByLabelText("Wide view"));
+    fireEvent.click(screen.getByLabelText("专注对话"));
     expect(panel.className).toContain("agent-panel--wide");
     expect(panel.style.width).toBe("");
 
     view.unmount();
     render(<AgentPanel {...defaultProps()} />);
     const restoredPanel = screen.getByText("GeneCode Agent").closest(".agent-panel") as HTMLElement;
+    expect(restoredPanel.className).toContain("agent-panel--wide");
+    expect(restoredPanel.style.width).toBe("");
+    fireEvent.click(screen.getByLabelText("序列并排"));
     expect(restoredPanel.style.width).toBe("520px");
+  });
+
+  it("supports keyboard resizing at the conversation-workbench boundary", () => {
+    render(<AgentPanel {...defaultProps()} />);
+    const separator = screen.getByRole("separator", { name: "调整 Agent 面板宽度" });
+    fireEvent.keyDown(separator, { key: "ArrowLeft" });
+    expect(window.localStorage.getItem("genecode-agent-panel-width")).toBe("460");
+    fireEvent.keyDown(separator, { key: "ArrowRight" });
+    expect(window.localStorage.getItem("genecode-agent-panel-width")).toBe("420");
+    fireEvent.keyDown(separator, { key: "Home" });
+    expect(separator.getAttribute("aria-valuenow")).toBe("360");
+    fireEvent.keyDown(separator, { key: "End" });
+    expect(separator.getAttribute("aria-valuenow")).toBe("800");
   });
 
   it("wide mode does not break collapse/expand", () => {
@@ -2424,7 +2509,7 @@ describe("AgentPanel", () => {
     const panel = screen.getByText("GeneCode Agent").closest(".agent-panel")!;
 
     // Enable wide mode
-    fireEvent.click(screen.getByLabelText("Wide view"));
+    fireEvent.click(screen.getByLabelText("专注对话"));
     expect(panel.className).toContain("agent-panel--wide");
 
     // Collapse
@@ -2476,7 +2561,7 @@ describe("AgentPanel", () => {
   it("shows objective node when lastUserGoal is set", () => {
     mockSession.lastUserGoal = "Design Gibson primers for my gene";
     render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("目标")).toBeDefined();
+    expect(screen.getByRole("region", { name: "当前目标" })).toBeDefined();
     expect(screen.getByText("Design Gibson primers for my gene")).toBeDefined();
   });
 
@@ -2485,7 +2570,7 @@ describe("AgentPanel", () => {
     mockSession.phase = "planning";
     render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("Step flow")).toBeDefined();
+    expect(screen.getByRole("region", { name: "任务流程" })).toBeDefined();
     expect(screen.getByText("等待 Agent 事件")).toBeDefined();
     expect(screen.queryByRole("progressbar")).toBeNull();
     expect(screen.queryByRole("region", { name: "Agent 任务进度" })).toBeNull();
@@ -2499,7 +2584,7 @@ describe("AgentPanel", () => {
     ];
     const { container, rerender } = render(<AgentPanel {...defaultProps()} />);
 
-    expect(screen.getByText("Step flow")).toBeDefined();
+    expect(screen.getByRole("region", { name: "任务流程" })).toBeDefined();
     const dag = container.querySelector(".agent-step-dag");
     expect(dag).not.toBeNull();
     expect(dag?.textContent).toContain("primer3");
@@ -2519,20 +2604,20 @@ describe("AgentPanel", () => {
   it("keeps the empty task entry concise when a document is ready", () => {
     render(<AgentPanel {...defaultProps()} />);
     expect(screen.queryByText("Set objective")).toBeNull();
-    expect(screen.getByText("新建分子设计")).toBeDefined();
+    expect(screen.getByLabelText("新建分子设计")).toBeDefined();
   });
 
   it("shows Set objective guidance when sequence context is missing", () => {
     render(<AgentPanel {...defaultProps()} doc={makeDoc({ sequence: "" })} />);
-    expect(screen.getByText("设定目标")).toBeDefined();
-    expect(screen.getByText("添加序列或描述基因、登录号或设计目标")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "从一个想法，到下一步设计。" })).toBeDefined();
+    expect(screen.getByText(/可直接描述目标或添加序列文件/)).toBeDefined();
   });
 
   // ── Document context ───────────────────────────────────────
 
   it("shows circular document type", () => {
     render(<AgentPanel {...defaultProps()} doc={makeDoc({ circular: true })} />);
-    expect(screen.getByText(/Circular/)).toBeDefined();
+    expect(screen.getByText(/环状/)).toBeDefined();
   });
 
   it("hides starter chips when messages exist", () => {
@@ -2553,7 +2638,7 @@ describe("AgentPanel", () => {
       { step: "1", tool: "primer3", status: "success", message: "Found 3 primers" },
     ];
     const { container } = render(<AgentPanel {...defaultProps()} />);
-    expect(screen.getByText("Step flow")).toBeDefined();
+    expect(screen.getByRole("region", { name: "任务流程" })).toBeDefined();
     const dag = container.querySelector(".agent-step-dag");
     expect(dag).not.toBeNull();
     expect(within(dag as HTMLElement).getByText("Analyze vector")).toBeDefined();

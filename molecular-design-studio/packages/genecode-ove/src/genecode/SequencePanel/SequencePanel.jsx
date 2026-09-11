@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { getComplementSequenceString } from "@teselagen/sequence-utils";
 import prepareRowData from "../../utils/prepareRowData";
 import withEditorInteractions from "../../withEditorInteractions";
@@ -12,10 +12,14 @@ import {
   buildRowLayout,
   buildRowOffsets,
   DEFAULT_LAYOUT_OPTIONS,
+  SEQUENCE_PANEL_LAYOUT_VERSION,
+  fitAnnotationLabel,
+  hasAnnotationArrowhead,
   getAnnotationLabel,
   getRecognitionSiteOverlaps,
   getCutsitePosition,
   getCutsiteBottomPosition,
+  getCutsiteGroupKey,
   getFocusPosition,
   getStableBpsPerRow,
   getNearestCaretPosition,
@@ -134,6 +138,14 @@ function getHitRegionProps(handlers, item) {
   const hasAny = Boolean(handlers.onClick || handlers.onDoubleClick || handlers.onContextMenu);
   return {
     className: hasAny ? "genecode-sequence-hit-region" : undefined,
+    role: hasAny ? "button" : undefined,
+    tabIndex: hasAny ? 0 : undefined,
+    onKeyDown: hasAny ? event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      invokeAnnotationHandler(handlers.onClick || handlers.onDoubleClick, event, item);
+    } : undefined,
     onClick: event => invokeAnnotationHandler(handlers.onClick, event, item),
     onDoubleClick: event => invokeAnnotationHandler(handlers.onDoubleClick, event, item),
     onContextMenu: event => invokeAnnotationHandler(handlers.onContextMenu, event, item)
@@ -165,7 +177,7 @@ function renderBases(row, layout, direction, sequenceData) {
 function renderRuler(row, layout, sequenceLength) {
   const track = getTrack(layout, "axis");
   if (!track) return null;
-  const baseY = track.y + 5;
+  const baseY = track.y + 3;
   const ticks = [];
   for (let offset = 0; offset < layout.rowLength; offset += 1) {
     const globalPosition = row.start + offset;
@@ -178,7 +190,7 @@ function renderRuler(row, layout, sequenceLength) {
         x1={x}
         x2={x}
         y1={baseY}
-        y2={baseY + (isMajor ? 8 : 4)}
+        y2={baseY + (isMajor ? 4 : 2)}
         stroke="#76808a"
         strokeWidth={isMajor ? 1 : 0.7}
       />
@@ -211,32 +223,49 @@ function renderRuler(row, layout, sequenceLength) {
   );
 }
 
-function renderArrow(item, layout, track, fallbackColor, interactionProps) {
+function renderArrow(item, layout, track, fallbackColor, interactionProps, rowId) {
   const annotation = item.annotation || {};
   const x = getBaseX(layout, { start: layout.rowStart }, item.start);
   const width = getRangeWidth(item, layout.charWidth);
   const y = track.y + item.lane * track.laneHeight + 2;
   const height = Math.max(12, track.laneHeight - 4);
   const forward = annotation.forward !== false;
-  const arrow = Math.min(8, Math.max(3, width / 3));
+  const arrow = hasAnnotationArrowhead(item) ? Math.min(9, Math.max(3, width / 3)) : 0;
   const points = forward
     ? `${x},${y} ${x + width - arrow},${y} ${x + width},${y + height / 2} ${x + width - arrow},${y + height} ${x},${y + height}`
     : `${x + arrow},${y} ${x + width},${y} ${x + width},${y + height} ${x + arrow},${y + height} ${x},${y + height / 2}`;
   const handlers = getInteractionHandlers(item, track.kind, interactionProps);
+  const color = getItemColor(item, fallbackColor);
+  const label = item.label || getAnnotationLabel(item);
+  const selected = interactionProps.selectionLayer?.start === item.sourceStart
+    && interactionProps.selectionLayer?.end === item.sourceEnd;
+  const clipId = `${rowId}-${track.id}-${item.id}-${item.start}-${item.lane}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const labelWidth = width - 14 - arrow;
+  const hitProps = getHitRegionProps(handlers, item);
   return (
     <g
       key={`${track.id}-${item.id}-${item.start}-${item.end}`}
-      {...getHitRegionProps(handlers, item)}
+      {...hitProps}
+      className={`${hitProps.className || ""} genecode-sequence-feature${selected ? " genecode-sequence-feature--selected" : ""}`}
+      style={{ "--annotation-color": color }}
+      aria-label={`${label}，${item.sourceStart + 1}–${item.sourceEnd + 1}，${forward ? "正向" : "反向"}`}
+      aria-pressed={selected}
+      data-annotation-id={annotation.id}
+      data-arrowhead={arrow > 0}
     >
-      <polygon points={points} fill={getItemColor(item, fallbackColor)} stroke="#54606a" strokeWidth="0.8" />
-      {width >= 52 && (
+      <title>{`${label}\n${annotation.type || "特征"} · ${item.sourceStart + 1}–${item.sourceEnd + 1} · ${forward ? "正向 →" : "← 反向"}\n单击选中，双击编辑`}</title>
+      <defs><clipPath id={clipId}><rect x={x + 7 + (forward ? 0 : arrow)} y={y} width={Math.max(0, labelWidth)} height={height} /></clipPath></defs>
+      <polygon className="genecode-sequence-feature-shape" points={points} strokeWidth="1" strokeLinejoin="round" />
+      {labelWidth >= 25 && (
         <text
           x={x + width / 2}
-          y={y + height - 4}
+          y={y + height / 2}
+          dominantBaseline="central"
           textAnchor="middle"
+          clipPath={`url(#${clipId})`}
           className="genecode-sequence-feature-label"
         >
-          {item.label || getAnnotationLabel(item)}
+          {fitAnnotationLabel(label, labelWidth, 6.3)}
         </text>
       )}
     </g>
@@ -246,10 +275,10 @@ function renderArrow(item, layout, track, fallbackColor, interactionProps) {
 function renderPrimer(item, layout, track, interactionProps) {
   const x = getBaseX(layout, { start: layout.rowStart }, item.start);
   const width = getRangeWidth(item, layout.charWidth);
-  const y = track.y + item.lane * track.laneHeight + 3;
-  const height = Math.max(10, track.laneHeight - 6);
+  const y = track.y + item.lane * track.laneHeight + 16;
+  const height = 14;
   const forward = item.annotation?.forward !== false;
-  const arrow = Math.min(7, Math.max(3, width / 3));
+  const arrow = hasAnnotationArrowhead(item) ? Math.min(7, Math.max(3, width / 3)) : 0;
   const points = forward
     ? `${x},${y} ${x + width - arrow},${y} ${x + width},${y + height / 2} ${x + width - arrow},${y + height} ${x},${y + height}`
     : `${x + arrow},${y} ${x + width},${y} ${x + width},${y + height} ${x + arrow},${y + height} ${x},${y + height / 2}`;
@@ -258,71 +287,84 @@ function renderPrimer(item, layout, track, interactionProps) {
     <g
       key={`${track.id}-${item.id}-${item.start}-${item.end}`}
       {...getHitRegionProps(handlers, item)}
+      aria-label={`${item.label}，引物，${item.sourceStart + 1}–${item.sourceEnd + 1}`}
     >
-      <polygon points={points} fill="url(#genecode-primer-stripes)" stroke="#2f6f9f" strokeWidth="1" />
+      <title>{`${item.label}\n引物 · ${item.sourceStart + 1}–${item.sourceEnd + 1} · ${forward ? "正向 →" : "← 反向"}`}</title>
+      <polygon className="genecode-sequence-primer-shape" points={points} fill="white" stroke="#a541c7" strokeWidth="1.4" />
       {width >= 64 && (
-        <text x={x + width / 2} y={y + height - 2} textAnchor="middle" className="genecode-sequence-primer-label">
-          {item.label || getAnnotationLabel(item, "Primer")}
+        <text x={x + width / 2} y={y - 4} textAnchor="middle" className="genecode-sequence-primer-label">
+          {fitAnnotationLabel(item.label || getAnnotationLabel(item, "Primer"), width - 22)}
         </text>
       )}
     </g>
   );
 }
 
-function renderLabels(track, layout, row, interactionProps, hoveredCutsiteId, onCutsiteHover) {
+function renderLabels(track, layout, row, interactionProps, hoveredCutsiteId, onCutsiteHover, onToggleLabels) {
   if (!track) return null;
+  const overflowWidth = Math.min(168, layout.rowLength * layout.charWidth);
   return (
     <g className="genecode-sequence-labels">
+      {track.items.map(item => {
+        const x = getBaseX(layout, row, getCutsitePosition(item, row));
+        const labelX = getBaseX(layout, row, (item.labelExtent.start + item.labelExtent.end) / 2);
+        const y = track.y + item.lane * track.laneHeight;
+        const sequenceY = getTrack(layout, "sequence-forward")?.y ?? track.y + track.height;
+        return <path key={`connector-${item.id}-${item.start}`} className={`genecode-sequence-cutsite-connector${hoveredCutsiteId === item.id ? " genecode-sequence-cutsite-connector--hovered" : ""}`} d={`M ${labelX} ${y + 15} L ${x} ${y + 18} L ${x} ${sequenceY - 2}`} fill="none" pointerEvents="none" />;
+      })}
       {track.items.map(item => {
         const anchor = item.labelType === "cutsites"
           ? getCutsitePosition(item, row)
           : item.start;
-        // Cut-site labels anchor to a cut boundary (between bases). Other
-        // annotations remain centred on their first base as before.
         const isCutsite = item.labelType === "cutsites";
-        const x = getBaseX(layout, row, anchor) + (isCutsite ? 0 : layout.charWidth / 2);
-        const targetX = getBaseX(layout, row, Math.min(item.end, row.end)) + layout.charWidth / 2;
+        const labelLeft = getBaseX(layout, row, item.labelExtent.start);
+        const labelWidth = (item.labelExtent.end - item.labelExtent.start) * layout.charWidth;
+        const labelX = labelLeft + labelWidth / 2;
         const y = track.y + item.lane * track.laneHeight;
         // Each collision-free lane owns its own connector baseline. The old
         // implementation reused lane 0's baseline for every label, which made
         // labels in lanes 1–3 appear to cross and visually overlap.
-        const labelY = y + track.laneHeight - 6;
+        const labelY = y + 12;
         const handlers = getInteractionHandlers(item, item.labelType, interactionProps);
         const cutsiteClass = isCutsite
           ? item.annotation?.labelClassName || item.annotation?.labelClassname || item.labelClassName || item.labelClassname || ""
           : "";
         const isCutsiteHovered = isCutsite && hoveredCutsiteId === item.id;
-        const labelText = String(item.label || "");
+        const labelText = fitAnnotationLabel(item.label, labelWidth - 14, 7);
         const labelStyle = isCutsite
-          ? { fill: isCutsiteHovered ? getItemColor(item, item.annotation?.labelColor || "#d9362e") : "#3d4a57" }
+          ? undefined
           : item.labelType === "features"
             ? { fill: getItemColor(item, "#2b3642") }
             : undefined;
         const hitProps = getHitRegionProps(handlers, item);
+        const names = item.annotation?.isoschizomerNames || [getAnnotationLabel(item)];
+        const boundary = Number(item.annotation?.topSnipPosition ?? anchor);
+        const detail = isCutsite
+          ? `${names.join(" / ")}\n${names.length > 1 ? `同一双链切点共 ${names.length} 种酶；` : ""}正链：${boundary === 0 ? "序列起点" : `第 ${boundary} 位后`}\n单击定位，双击查看酶信息`
+          : `${item.label} · ${item.sourceStart + 1}–${item.sourceEnd + 1}`;
         return (
           <g
             key={`label-${item.id}-${item.start}-${item.end}`}
             {...hitProps}
             className={`${hitProps.className || ""} genecode-sequence-label-group${isCutsiteHovered ? " genecode-sequence-label-group--hovered" : ""}`}
+            aria-label={detail.replaceAll("\n", "；")}
             onMouseEnter={isCutsite ? () => onCutsiteHover?.(item.id) : undefined}
             onMouseLeave={isCutsite ? () => onCutsiteHover?.(null) : undefined}
+            onFocus={isCutsite ? () => onCutsiteHover?.(item.id) : undefined}
+            onBlur={isCutsite ? () => onCutsiteHover?.(null) : undefined}
           >
-            {isCutsiteHovered && (
+            <title>{detail}</title>
               <rect
                 className="genecode-sequence-cutsite-label-badge"
-                x={x - Math.max(12, labelText.length * 3.1 + 5)}
-                y={y + track.laneHeight - 18}
-                width={Math.max(24, labelText.length * 6.2 + 10)}
-                height="14"
+                x={labelLeft}
+                y={y - 1}
+                width={labelWidth}
+                height="16"
                 rx="2"
-                pointerEvents="none"
               />
-            )}
-            <line x1={x} x2={x} y1={y + 4} y2={labelY + 2} stroke="#a6afb7" strokeWidth="0.7" />
-            <line x1={x} x2={targetX} y1={labelY + 2} y2={labelY + 2} stroke="#c0c7cd" strokeWidth="0.7" />
             <text
-              x={x}
-              y={y + track.laneHeight - 7}
+              x={labelX}
+              y={labelY}
               textAnchor="middle"
               className={`genecode-sequence-label-text genecode-sequence-label-${item.labelType || "other"} ${cutsiteClass}${isCutsiteHovered ? " genecode-sequence-label-cutsites-hovered" : ""}`}
               style={labelStyle}
@@ -332,10 +374,23 @@ function renderLabels(track, layout, row, interactionProps, hoveredCutsiteId, on
           </g>
         );
       })}
-      {track.hiddenCount > 0 && (
-        <text x={layout.leftGutter} y={track.y + track.height - 5} className="genecode-sequence-overflow-label">
-          +{track.hiddenCount} more
-        </text>
+      {(track.hiddenCount > 0 || track.expanded) && (
+        <g className="genecode-sequence-overflow-control" role="button" tabIndex={0}
+          aria-label={track.expanded ? "收起本行标记" : `展开本行其余 ${track.hiddenCount} 个标记`}
+          aria-expanded={track.expanded}
+          onPointerDown={event => event.stopPropagation()}
+          onClick={event => { event.stopPropagation(); onToggleLabels?.(); }}
+          onKeyDown={event => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault(); event.stopPropagation(); onToggleLabels?.();
+            }
+          }}
+        >
+          <rect x={layout.leftGutter} y={track.y + track.height - 24} width={overflowWidth} height="23" rx="4" />
+          <text x={layout.leftGutter + 8} y={track.y + track.height - 8} className="genecode-sequence-overflow-label">
+            {fitAnnotationLabel(track.expanded ? "收起本行标记 ↑" : `另有 ${track.hiddenCount} 个标记 · 展开 ↓`, overflowWidth - 16, 6)}
+          </text>
+        </g>
       )}
     </g>
   );
@@ -382,15 +437,11 @@ function renderTranslations(track, layout, row) {
 
 function renderCutsites(row, layout, cutsiteItems, sequenceForwardTrack, sequenceReverseTrack, interactionProps, sequenceLength, hoveredCutsiteId, onCutsiteHover) {
   if ((!sequenceForwardTrack && !sequenceReverseTrack) || !cutsiteItems.length) return null;
-  // The engine emits one cutsite per enzyme, so the same cut position can
-  // carry several isoschizomers (e.g. VpaKutJI / VpaK11BI / VchO66I all cut
-  // 1307-1311). SnapGene collapses them into a single marker: dedupe by the
-  // resolved cut position so the row doesn't stack 3-12 vertical bars per site.
+  // The engine emits one cutsite per enzyme. Draw one marker per pair of
+  // strand boundaries; distinct bottom cuts must not be silently merged.
   const seenPositions = new Set();
   const uniqueItems = cutsiteItems.filter(item => {
-    const topPosition = getCutsitePosition(item, row);
-    const bottomPosition = getCutsiteBottomPosition(item, row);
-    const key = `${topPosition ?? "outside"}:${bottomPosition ?? "outside"}`;
+    const key = getCutsiteGroupKey(item, row);
     if (seenPositions.has(key)) return false;
     seenPositions.add(key);
     return true;
@@ -423,8 +474,6 @@ function renderCutsites(row, layout, cutsiteItems, sequenceForwardTrack, sequenc
         />
       );
     };
-    const positions = (isHovered ? [topPosition, bottomPosition] : [topPosition ?? bottomPosition])
-      .filter((position, index, values) => position !== null && position !== undefined && values.indexOf(position) === index);
     const recognitionOverlaps = getRecognitionSiteOverlaps(item, row, sequenceLength);
     const firstTrack = sequenceForwardTrack || sequenceReverseTrack;
     const lastTrack = sequenceReverseTrack || sequenceForwardTrack;
@@ -435,8 +484,11 @@ function renderCutsites(row, layout, cutsiteItems, sequenceForwardTrack, sequenc
         key={`cutsite-${item.id}-${topPosition}-${bottomPosition}`}
         {...hitProps}
         className={`${hitProps.className || ""} genecode-sequence-cutsite-visual${isHovered ? " genecode-sequence-cutsite-visual--hovered" : ""}`}
+        aria-label={`${getAnnotationLabel(item)} 切点，正链第 ${topPosition} 位后`}
         onMouseEnter={() => onCutsiteHover?.(item.id)}
         onMouseLeave={() => onCutsiteHover?.(null)}
+        onFocus={() => onCutsiteHover?.(item.id)}
+        onBlur={() => onCutsiteHover?.(null)}
       >
         {recognitionOverlaps.map((range, index) => (
           <rect
@@ -450,11 +502,8 @@ function renderCutsites(row, layout, cutsiteItems, sequenceForwardTrack, sequenc
             pointerEvents="all"
           />
         ))}
-        {positions.map((position, index) => marker(
-          position,
-          position === topPosition ? sequenceForwardTrack : sequenceReverseTrack,
-          position === topPosition ? "top" : "bottom"
-        ) || marker(position, sequenceForwardTrack || sequenceReverseTrack, index === 0 ? "top" : "bottom"))}
+        {marker(topPosition, sequenceForwardTrack, "top")}
+        {(isHovered || topPosition === null) && marker(bottomPosition, sequenceReverseTrack, "bottom")}
       </g>
     );
   });
@@ -505,6 +554,7 @@ function renderSelectionAndCaret(row, layout, props) {
 }
 
 function SequenceRow({ row, layout, sequenceData, sequenceLength, ...interactionProps }) {
+  const rowId = useId();
   const [hoveredCutsiteId, setHoveredCutsiteId] = useState(null);
   const emitPosition = (event, nearestCaretPosOverride) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -603,7 +653,7 @@ function SequenceRow({ row, layout, sequenceData, sequenceLength, ...interaction
       width={layout.width}
       height={layout.height}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
-      role="img"
+      role="group"
       aria-label={`Sequence bases ${row.start + 1} to ${row.end + 1}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -655,16 +705,10 @@ function SequenceRow({ row, layout, sequenceData, sequenceLength, ...interaction
         sequenceLength,
         hoveredCutsiteId === item.id
       ))}
-      <defs>
-        <pattern id="genecode-primer-stripes" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="6" height="6" fill="#e7f0f7" />
-          <rect width="2" height="6" fill="#9fc2dc" />
-        </pattern>
-      </defs>
       <text x="8" y={(sequenceForwardTrack?.y || layout.rowPaddingTop) + 14} className="genecode-sequence-prime-label">5&apos;</text>
       <text x={layout.leftGutter + layout.rowLength * layout.charWidth + 12} y={(sequenceForwardTrack?.y || layout.rowPaddingTop) + 14} className="genecode-sequence-prime-label">3&apos;</text>
-      {renderLabels(getTrack(layout, "labels"), layout, row, interactionProps, hoveredCutsiteId, setHoveredCutsiteId)}
-      {featureForwardTrack?.items.map(item => renderArrow(item, layout, featureForwardTrack, "#7da7c9", interactionProps))}
+      {renderLabels(getTrack(layout, "labels"), layout, row, interactionProps, hoveredCutsiteId, setHoveredCutsiteId, interactionProps.onToggleLabels)}
+      {featureForwardTrack?.items.map(item => renderArrow(item, layout, featureForwardTrack, "#7da7c9", interactionProps, rowId))}
       {primerForwardTrack?.items.map(item => renderPrimer(item, layout, primerForwardTrack, interactionProps))}
       {renderBases(row, layout, "forward", sequenceData)}
       {renderRuler(row, layout, sequenceLength)}
@@ -673,7 +717,7 @@ function SequenceRow({ row, layout, sequenceData, sequenceLength, ...interaction
       {renderBases(row, layout, "reverse", sequenceData)}
       {renderTranslations(translationTrack, layout, row)}
       {primerReverseTrack?.items.map(item => renderPrimer(item, layout, primerReverseTrack, interactionProps))}
-      {featureReverseTrack?.items.map(item => renderArrow(item, layout, featureReverseTrack, "#9db7c9", interactionProps))}
+      {featureReverseTrack?.items.map(item => renderArrow(item, layout, featureReverseTrack, "#9db7c9", interactionProps, rowId))}
       {renderCutsites(row, layout, layout.cutsiteItems, sequenceForwardTrack, sequenceReverseTrack, interactionProps, sequenceLength, hoveredCutsiteId, setHoveredCutsiteId)}
       {renderSelectionAndCaret(row, layout, interactionProps)}
     </svg>
@@ -681,6 +725,7 @@ function SequenceRow({ row, layout, sequenceData, sequenceLength, ...interaction
 }
 
 function SequencePanelView(props) {
+  const [expandedLabelRows, setExpandedLabelRows] = useState(new Set());
   const sequenceData = props.sequenceData || EMPTY_SEQUENCE_DATA;
   const width = Number(props.dimensions?.width || props.width || 960);
   const height = Number(props.dimensions?.height || props.height || 480);
@@ -716,6 +761,7 @@ function SequencePanelView(props) {
     sequenceData,
     annotationVisibility: props.annotationVisibility || {},
     annotationLabelVisibility: props.annotationLabelVisibility || {},
+    preferredEnzymeNames: props.enzymeGroupsOverride?.["Common cloning"] || [],
     selectionLayer: props.selectionLayer,
     caretPosition: props.caretPosition,
     layoutOptions: {
@@ -728,10 +774,13 @@ function SequencePanelView(props) {
     sequenceData,
     props.annotationVisibility,
     props.annotationLabelVisibility,
+    props.enzymeGroupsOverride,
     props.selectionLayer,
     props.caretPosition
   ]);
-  const layouts = useMemo(() => rowData.map(row => buildRowLayout(row, layoutProps)), [rowData, layoutProps]);
+  const layouts = useMemo(() => rowData.map(row => buildRowLayout(row, {
+    ...layoutProps, labelsExpanded: expandedLabelRows.has(row.rowNumber)
+  })), [rowData, layoutProps, expandedLabelRows]);
   const offsets = useMemo(() => buildRowOffsets(layouts), [layouts]);
   const totalHeight = offsets[offsets.length - 1] || 0;
   const scrollRef = useRef(null);
@@ -980,7 +1029,7 @@ function SequencePanelView(props) {
   return (
     <div
       className="genecode-sequence-panel"
-      data-layout-version="p0.1"
+      data-layout-version={SEQUENCE_PANEL_LAYOUT_VERSION}
       data-rendered-row-count={visibleRows.length}
       data-total-row-count={rowData.length}
       style={{ width: "100%", height: height || 400, overflow: "hidden", background: "#ffffff" }}
@@ -1003,6 +1052,12 @@ function SequencePanelView(props) {
                   sequenceData={sequenceData}
                   sequenceLength={sequenceLength}
                   {...props}
+                  onToggleLabels={() => setExpandedLabelRows(current => {
+                    const next = new Set(current);
+                    if (next.has(row.rowNumber)) next.delete(row.rowNumber);
+                    else next.add(row.rowNumber);
+                    return next;
+                  })}
                   resolveNearestPositionAtPoint={resolveNearestPositionAtPoint}
                   onSequenceDragStart={startDragTracking}
                   onSequenceDragMove={scheduleAutoScroll}

@@ -1,9 +1,8 @@
-import { Icon } from "@blueprintjs/core";
+import { Tags } from "lucide-react";
 // import { Checkbox, Button } from "@blueprintjs/core";
 import React from "react";
 // import { connect } from "react-redux";
 // import { convertRangeTo1Based } from "@teselagen/range-utils";
-import { featureIcon } from "@teselagen/ui";
 import ToolbarItem from "./ToolbarItem";
 import { connectToEditor } from "../withEditorProps";
 
@@ -18,7 +17,7 @@ export default connectToEditor(
   return (
     <ToolbarItem
       {...{
-        Icon: <Icon icon={featureIcon} />,
+        Icon: <Tags aria-hidden="true" />,
         onIconClick: function () {
           annotationVisibilityToggle("features");
         },

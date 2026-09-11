@@ -1,11 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Tooltip } from "@mui/material";
-import FileText from "@mui/icons-material/DescriptionRounded";
-import PanelLeft from "@mui/icons-material/ViewSidebarRounded";
-import PanelLeftClose from "@mui/icons-material/MenuOpenRounded";
-import Plus from "@mui/icons-material/AddRounded";
-import Settings from "@mui/icons-material/SettingsRounded";
-import X from "@mui/icons-material/CloseRounded";
+import { FileText, PanelLeft, PanelLeftClose, Plus, Settings, X } from "lucide-react";
 import Sidebar, { type SidebarSection } from "./components/Sidebar";
 import Editor from "./components/Editor";
 // A-PERF-001: the Agent panel owns the heavy agent layer (service client,
@@ -54,10 +49,10 @@ function App() {
   });
   const [agentOpen, setAgentOpen] = useState(() => {
     if (typeof window === "undefined") return false;
-    if (window.innerWidth < 1400) return false;
+    if (window.innerWidth < 1000) return false;
     const stored = window.localStorage.getItem("genecode-agent-open");
     if (stored !== null) return stored === "true";
-    return true;
+    return false;
   });
   const agentToggleRef = useRef<HTMLButtonElement>(null);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
@@ -94,7 +89,7 @@ function App() {
     setAgentOpen(open);
     if (open) {
       setAgentEverOpened(true);
-      if (window.innerWidth < 1400) {
+      if (window.innerWidth < 1000) {
         setSidebarOpen(false);
       }
     } else {
@@ -106,7 +101,7 @@ function App() {
 
   useEffect(() => {
     const handleShellEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || event.defaultPrevented) return;
       if (agentOpen) {
         event.preventDefault();
         setAgentVisibility(false);
@@ -523,52 +518,7 @@ function App() {
   }, [workspace.doc, workspace.filePath, workspace.isDirty, workspace.history, project.activeId, updateActiveProjectState]);
 
   return (
-    <div className="app-shell">
-      <nav className="document-tabs" aria-label="已打开序列">
-        <div className="document-tabs__list">
-          {project.projects.map((entry) => (
-            <div
-              key={entry.id}
-              className={`document-tab${entry.id === project.activeId ? " document-tab--active" : ""}`}
-            >
-              <button
-                type="button"
-                className="document-tab__select"
-                onClick={() => handleSwitchProject(entry.id)}
-                aria-current={entry.id === project.activeId ? "page" : undefined}
-                title={`Open ${entry.name}`}
-              >
-                <FileText aria-hidden="true" />
-                <span className="document-tab__name">{entry.name}</span>
-                <span className="document-tab__meta">
-                  DNA · {entry.doc.sequence.length.toLocaleString()} bp · {entry.doc.circular ? "circular" : "linear"}
-                </span>
-                {entry.isDirty && <span className="document-tab__dirty" aria-label="未保存更改">●</span>}
-              </button>
-              {project.projects.length > 1 && (
-                <button
-                  type="button"
-                  className="document-tab__close"
-                  onClick={() => void handleCloseProjectTab(entry.id)}
-                  aria-label={`Close ${entry.name}`}
-                  title={`Close ${entry.name}`}
-                >
-                  <X aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            className="document-tabs__new"
-            onClick={() => handleCreateProject(`Sequence ${project.projects.length + 1}`)}
-            aria-label="新建序列标签页"
-            title="New sequence"
-          >
-            <Plus aria-hidden="true" />
-          </button>
-        </div>
-      </nav>
+    <div className={`app-shell workbench${agentOpen ? " workbench--agent-open" : ""}`}>
       <AppBar component="header" position="static" elevation={0} color="transparent" className="top-bar">
         <Toolbar disableGutters className="top-bar__toolbar">
           <Tooltip title={sidebarOpen ? "隐藏序列文库" : "显示序列文库"}>
@@ -591,7 +541,7 @@ function App() {
           </Box>
           <Stack direction="row" alignItems="center" spacing={1} className="top-bar__document">
             <span className="top-bar__status">
-              {workspace.doc ? workspace.basename ?? workspace.doc.name : "No sequence open"}
+              分子设计工作台
             </span>
             {workspace.doc && (
               <Tooltip title={project.saveError || workspace.saveError || "本地自动保存状态"}>
@@ -628,7 +578,8 @@ function App() {
               aria-controls="agent-panel"
               startIcon={<img className="top-bar__agent-toggle-avatar" src="/assets/brand/genecode-agent-avatar-v3.png" alt="" aria-hidden="true" />}
             >
-              GeneCode Agent
+              <span className="top-bar__agent-label--desktop">Agent 对话</span>
+              <span className="top-bar__agent-label--compact">{agentOpen ? "序列工作区" : "Agent 对话"}</span>
             </Button>
           </Tooltip>
           <Tooltip title="设置">
@@ -638,12 +589,6 @@ function App() {
           </Tooltip>
         </Toolbar>
       </AppBar>
-      <div
-        id="document-toolbar-slot"
-        className="doc-toolbar-row"
-        role="region"
-        aria-label="Document commands"
-      />
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
       <div className="app-body">
         {sidebarOpen && (
@@ -678,7 +623,61 @@ function App() {
             />
           </>
         )}
-        <main className="main-area">
+        <main className="main-area" aria-label="序列工作区">
+      <div className="workspace-document-header">
+      <nav className="document-tabs" aria-label="已打开序列">
+        <div className="document-tabs__list">
+          {project.projects.map((entry) => (
+            <div
+              key={entry.id}
+              className={`document-tab${entry.id === project.activeId ? " document-tab--active" : ""}`}
+            >
+              <button
+                type="button"
+                className="document-tab__select"
+                onClick={() => handleSwitchProject(entry.id)}
+                aria-current={entry.id === project.activeId ? "page" : undefined}
+                title={`Open ${entry.name}`}
+              >
+                <FileText aria-hidden="true" />
+                <span className="document-tab__name">{entry.name}</span>
+                <span className="document-tab__meta">
+                  {entry.doc.sequence.length.toLocaleString()} bp · {entry.doc.circular ? "环状" : "线性"}
+                </span>
+                {entry.isDirty && <span className="document-tab__dirty" aria-label="未保存更改">●</span>}
+              </button>
+              {project.projects.length > 1 && (
+                <button
+                  type="button"
+                  className="document-tab__close"
+                  onClick={() => void handleCloseProjectTab(entry.id)}
+                  aria-label={`Close ${entry.name}`}
+                  title={`Close ${entry.name}`}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            className="document-tabs__new"
+            onClick={() => handleCreateProject(`Sequence ${project.projects.length + 1}`)}
+            aria-label="新建序列标签页"
+            title="New sequence"
+          >
+            <Plus aria-hidden="true" />
+          </button>
+        </div>
+      </nav>
+      <div
+        id="document-toolbar-slot"
+        className="doc-toolbar-row"
+        role="region"
+        aria-label="Document commands"
+      />
+      </div>
+
           <Editor
             doc={workspace.doc}
             isRestoring={workspace.isRestoring || project.isRestoring}

@@ -4629,15 +4629,53 @@ def design_cloning_response(payload: dict[str, Any]) -> dict[str, Any]:
         "messages": messages,
         "results": results,
     }
-def design_rt_primers(sequence: str, junctions: list[int], gdna_check: bool, include_probe: bool) -> list[dict[str, Any]]:
+# Default RT-qPCR amplicon window.  The planner/tool schema advertises
+# ampliconMin/ampliconMax, so the value must actually reach the design engine
+# (audit F5) — the defaults reproduce the historical 70–160 bp behaviour.
+RT_AMPLICON_MIN_DEFAULT = 70
+RT_AMPLICON_MAX_DEFAULT = 160
+def resolve_amplicon_bounds(payload: dict[str, Any]) -> tuple[int, int]:
+    """Resolve the requested amplicon size window.
+
+    Unsupported or inconsistent values raise instead of being silently dropped,
+    which is what made "the model planned a legal step" and "the engine ignored
+    the user's constraint" diverge (audit F5).
+    """
+    def coerce(key: str, default: int) -> int:
+        raw = payload.get(key)
+        if raw in (None, ""):
+            return default
+        try:
+            return int(str(raw).strip())
+        except (TypeError, ValueError):
+            raise ApiError(f"{key} 必须是整数（扩增子长度，单位 bp）。")
+
+    minimum = coerce("ampliconMin", RT_AMPLICON_MIN_DEFAULT)
+    maximum = coerce("ampliconMax", RT_AMPLICON_MAX_DEFAULT)
+    if minimum < 40 or maximum > 2000:
+        raise ApiError("扩增子长度范围需要在 40–2000 bp 之间。")
+    if minimum >= maximum:
+        raise ApiError("ampliconMin 必须小于 ampliconMax。")
+    if maximum - minimum < 10:
+        raise ApiError("扩增子长度范围至少需要 10 bp 的跨度。")
+    return minimum, maximum
+def design_rt_primers(
+    sequence: str,
+    junctions: list[int],
+    gdna_check: bool,
+    include_probe: bool,
+    *,
+    amplicon_min: int = RT_AMPLICON_MIN_DEFAULT,
+    amplicon_max: int = RT_AMPLICON_MAX_DEFAULT,
+) -> list[dict[str, Any]]:
     forward = generate_primer_candidates(sequence, reverse=False)
     reverse = generate_primer_candidates(sequence, reverse=True)
     candidates: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
 
     for f_start, forward_items in forward.items():
-        min_r = max(f_start + 70 - 24, 0)
-        max_r = min(f_start + 160 - 18, len(sequence))
+        min_r = max(f_start + amplicon_min - 24, 0)
+        max_r = min(f_start + amplicon_max - 18, len(sequence))
         for r_start in range(min_r, max_r + 1):
             reverse_items = reverse.get(r_start)
             if not reverse_items:
@@ -4645,7 +4683,7 @@ def design_rt_primers(sequence: str, junctions: list[int], gdna_check: bool, inc
             for f_item in forward_items:
                 for r_item in reverse_items:
                     amplicon = r_item["end"] - f_item["start"]
-                    if not 70 <= amplicon <= 160:
+                    if not amplicon_min <= amplicon <= amplicon_max:
                         continue
                     tm_delta = abs(f_item["tm"] - r_item["tm"])
                     if tm_delta > 1.8:
@@ -4674,11 +4712,12 @@ def design_rt_primers(sequence: str, junctions: list[int], gdna_check: bool, inc
                         continue
                     seen.add(key)
 
+                    ideal_amplicon = min(max(110, amplicon_min), amplicon_max)
                     score = (
                         f_item["quality"]
                         + r_item["quality"]
                         + tm_delta * 1.4
-                        + abs(amplicon - 110) / 25
+                        + abs(amplicon - ideal_amplicon) / 25
                         + (0 if gdna_state == "Yes" else 1.0 if gdna_state == "Unknown" else 4.0)
                     )
                     candidates.append(
@@ -5569,11 +5608,21 @@ def design_rt_response(payload: dict[str, Any]) -> dict[str, Any]:
     label, seq_payload = resolve_rt_payload(payload)
     gdna_check = bool(payload.get("gdnaCheck", True))
     include_probe = bool(payload.get("includeProbe", False))
-    results = design_rt_primers(seq_payload.sequence, seq_payload.junctions, gdna_check, include_probe)
+    amplicon_min, amplicon_max = resolve_amplicon_bounds(payload)
+    results = design_rt_primers(
+        seq_payload.sequence,
+        seq_payload.junctions,
+        gdna_check,
+        include_probe,
+        amplicon_min=amplicon_min,
+        amplicon_max=amplicon_max,
+    )
     if not results:
         raise ApiError("没有找到满足当前条件的 RT-qPCR 引物，请换一个候选条目或放宽条件。")
 
     messages = [seq_payload.note]
+    if (amplicon_min, amplicon_max) != (RT_AMPLICON_MIN_DEFAULT, RT_AMPLICON_MAX_DEFAULT):
+        messages.append(f"已按 {amplicon_min}–{amplicon_max} bp 的目标扩增子范围筛选候选。")
     snp_message = annotate_rt_candidates_with_snp(results, seq_payload)
     results = results[:5]
     if gdna_check and not seq_payload.junctions:

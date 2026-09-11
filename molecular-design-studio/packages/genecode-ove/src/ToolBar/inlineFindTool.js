@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "@blueprintjs/core";
+import { Search } from "lucide-react";
 import FindBar from "../FindBar";
 import ToolbarItem from "./ToolbarItem";
 import { connectToEditor } from "../withEditorProps";
@@ -19,10 +19,7 @@ export default connectToEditor(({ findTool = {} }) => {
     <ToolbarItem
       {...{
         Icon: !isOpen ? (
-          <div>
-            <Icon data-test="ve-find-tool-toggle" icon="search" />
-            <Icon icon="caret-right" />
-          </div>
+          <Search data-test="ve-find-tool-toggle" aria-hidden="true" />
         ) : (
           <FindBar
             editorName={editorName}
@@ -31,15 +28,7 @@ export default connectToEditor(({ findTool = {} }) => {
         ),
         renderIconAbove: isOpen,
         onIconClick: toggleFindTool,
-        tooltip: isOpen ? (
-          <span>
-            Hide Find Tool <span style={{ fontSize: 10 }}>(Cmd/Ctrl+F)</span>
-          </span>
-        ) : (
-          <span>
-            Show Find Tool <span style={{ fontSize: 10 }}>(Cmd/Ctrl+F)</span>
-          </span>
-        ),
+        tooltip: isOpen ? "关闭查找 (Cmd/Ctrl+F)" : "查找序列 (Cmd/Ctrl+F)",
         ...toolbarItemProps
       }}
     />

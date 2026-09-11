@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { flatMap, isString, pick } from "lodash-es";
 import versionHistoryTool from "./versionHistoryTool";
 // import {connectToEditor} from "../withEditorProps";
@@ -47,6 +48,7 @@ const allTools = {
 export function ToolBar(props) {
   const {
     modifyTools,
+    portalTarget,
     contentLeft,
     showMenuBar,
     displayMenuBarAboveTools,
@@ -138,7 +140,7 @@ export function ToolBar(props) {
     items = modifyTools(items);
   }
 
-  return (
+  const toolbar = (
     <div className="veToolbar-outer" style={{ display: "flex" }}>
       {contentLeft}
       <div
@@ -198,6 +200,7 @@ export function ToolBar(props) {
       </div>
     </div>
   );
+  return portalTarget ? createPortal(toolbar, portalTarget) : toolbar;
 }
 const CloseFullscreenButton = props => {
   return (

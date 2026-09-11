@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://genecode-agent.pages.dev/">
-    <img src="docs/assets/genecode-agent-workflow-preview.gif" alt="GeneCode live workflow: submit a task, let the Agent read the active sequence, then inspect completed tool steps" width="100%">
+    <img src="docs/assets/genecode-agent-workflow-preview.gif" alt="GeneCode live workflow: open the Agent, ask about the active plasmid, and inspect the sequence-aware answer" width="100%">
   </a>
 </p>
 

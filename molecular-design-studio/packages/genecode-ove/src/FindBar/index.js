@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronDown, ChevronUp, Search, Settings2, X } from "lucide-react";
 import {
   Button,
   InputGroup,
@@ -207,7 +208,8 @@ export class FindBar extends React.Component {
               <Button
                 data-test="veFindBarOptionsToggle"
                 minimal
-                icon="wrench"
+                icon={<Settings2 aria-hidden="true" />}
+                aria-label="查找选项"
               />
             }
             content={
@@ -227,7 +229,7 @@ export class FindBar extends React.Component {
             }
           />
         )}
-        <span style={{ marginRight: 3, color: "lightgrey" }}>
+        <span className="ve-find-match-count" style={{ marginRight: 3 }} aria-live="polite">
           {matchesTotal > 0 ? matchNumber + 1 : 0}/{matchesTotal}
         </span>
         <Button
@@ -240,7 +242,8 @@ export class FindBar extends React.Component {
               matchesTotal <= 0 ? 0 : mod(matchNumber - 1, matchesTotal)
             );
           }}
-          icon="caret-up"
+          icon={<ChevronUp aria-hidden="true" />}
+          aria-label="上一个匹配"
         />
         <Button
           data-test="veFindNextMatchButton"
@@ -252,10 +255,11 @@ export class FindBar extends React.Component {
               matchesTotal <= 0 ? 0 : mod(matchNumber + 1, matchesTotal)
             );
           }}
-          icon="caret-down"
+          icon={<ChevronDown aria-hidden="true" />}
+          aria-label="下一个匹配"
         />
         {isInline && (
-          <Button minimal small onClick={toggleFindTool} icon="small-cross" />
+          <Button minimal small onClick={toggleFindTool} icon={<X aria-hidden="true" />} aria-label="关闭查找" />
         )}
       </span>
     );
@@ -286,6 +290,8 @@ export class FindBar extends React.Component {
           target={
             <InputToUse
               autoFocus
+              aria-label="查找序列"
+              placeholder="查找序列或特征"
               style={{
                 resize: "vertical",
                 ...(!isInline && {
@@ -313,6 +319,8 @@ export class FindBar extends React.Component {
                   e.preventDefault();
                 } else if (e.keyCode === 27) {
                   //esc key!
+                  e.preventDefault();
+                  e.stopPropagation();
                   toggleFindTool();
                 }
               }}
@@ -321,7 +329,7 @@ export class FindBar extends React.Component {
                 return updateSearchText(e.target.value.replace(/\s/g, ""));
               }}
               value={searchText}
-              leftIcon="search"
+              leftIcon={<Search aria-hidden="true" />}
             />
           }
           position="bottom"
@@ -358,7 +366,8 @@ export class FindBar extends React.Component {
             minimal
             style={{ position: "absolute", bottom: 0, right: 0 }}
             onClick={toggleFindTool}
-            icon="cross"
+            icon={<X aria-hidden="true" />}
+            aria-label="关闭查找"
           />
         )}
       </div>

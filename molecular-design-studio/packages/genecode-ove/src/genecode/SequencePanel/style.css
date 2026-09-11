@@ -10,7 +10,7 @@
 
 .genecode-sequence-row {
   display: block;
-  border-bottom: 1px solid #eef1f3;
+  border-bottom: 1px solid transparent;
   shape-rendering: geometricPrecision;
   user-select: none;
   touch-action: none;
@@ -27,19 +27,19 @@
 .genecode-sequence-base {
   fill: #1f2b35;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   user-select: none;
 }
 
 .genecode-sequence-base-forward {
-  fill: #17242e;
-  font-weight: 650;
+  fill: #242a28;
+  font-weight: 550;
 }
 
 .genecode-sequence-base-reverse {
-  fill: #24323d;
-  font-weight: 600;
+  fill: #353b38;
+  font-weight: 500;
 }
 
 .genecode-sequence-forward-band {
@@ -47,12 +47,12 @@
 }
 
 .genecode-sequence-reverse-band {
-  fill: #eef3f6;
+  fill: #ffffff;
 }
 
 .genecode-sequence-strand-divider {
-  stroke: #bdc8d1;
-  stroke-width: 1;
+  stroke: transparent;
+  stroke-width: 0.6;
 }
 
 .genecode-sequence-ruler-label,
@@ -71,44 +71,46 @@
 }
 
 .genecode-sequence-ruler-label {
-  fill: #6d7983;
-  font-size: 8px;
+  fill: #78857d;
+  font-size: 9px;
 }
 
 .genecode-sequence-ruler > line:first-child {
-  stroke: #4d5b66;
-  stroke-width: 1.25;
+  stroke: #a6b2aa;
+  stroke-width: 0.8;
 }
 
 .genecode-sequence-ruler > line:not(:first-child) {
-  stroke: #667581;
+  stroke: #b3beb7;
 }
 
 .genecode-sequence-feature-label,
 .genecode-sequence-primer-label {
-  fill: #14202a;
-  font-size: 9px;
-  font-weight: 600;
+  fill: #28312d;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 10.5px;
+  font-weight: 500;
   letter-spacing: 0;
   pointer-events: none;
 }
 
 .genecode-sequence-label-text {
-  fill: #2b3642;
-  font-size: 10px;
+  fill: #365449;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
   font-style: normal;
   letter-spacing: 0;
 }
 
 .genecode-sequence-label-text.genecode-sequence-label-cutsites {
-  fill: #3d4a57;
-  font-weight: 600;
+  fill: #252d29;
+  font-weight: 550;
 }
 
 /* SnapGene-style emphasis: an enzyme that cuts exactly once is the most
    actionable label in a sequence view, so keep its name visibly heavier. */
 .genecode-sequence-label-text.genecode-sequence-label-cutsites.singleCutter {
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .genecode-sequence-cutsite-recognition {
@@ -125,26 +127,70 @@
 }
 
 .genecode-sequence-cutsite-recognition--hovered {
-  fill: #8d989f;
-  fill-opacity: 0.34;
-  stroke: #b3372f;
-  stroke-opacity: 0.72;
+  fill: #62a88b;
+  fill-opacity: 0.23;
+  stroke: #217366;
+  stroke-opacity: 0.65;
 }
 
-.genecode-sequence-label-group--hovered > line {
-  stroke: #b3372f;
-  stroke-width: 1.1;
+.genecode-sequence-cutsite-connector {
+  stroke: #a7b0aa;
+  stroke-width: 0.65;
 }
 
 .genecode-sequence-cutsite-label-badge {
-  fill: #ffffff;
-  stroke: #d94b43;
-  stroke-width: 1;
+  fill: #fff;
+  stroke: transparent;
+  stroke-width: 0.8;
 }
 
 .genecode-sequence-label-text.genecode-sequence-label-cutsites-hovered {
-  fill: #d9362e;
-  font-weight: 800;
+  fill: #17594b;
+  font-weight: 650;
+}
+.genecode-sequence-label-group--hovered .genecode-sequence-cutsite-label-badge,
+.genecode-sequence-label-group:focus-visible .genecode-sequence-cutsite-label-badge {
+  fill: #e5f2ea;
+  stroke: #217366;
+  stroke-width: 1.4;
+}
+.genecode-sequence-cutsite-connector--hovered {
+  stroke: #217366;
+  stroke-width: 1.3;
+  stroke-dasharray: none;
+}
+.genecode-sequence-feature-shape {
+  fill: var(--annotation-color, #5c9980);
+  fill-opacity: .12;
+  stroke: #707b74;
+  stroke-opacity: .7;
+}
+.genecode-sequence-primer-label { fill: #9630b9; }
+.genecode-sequence-hit-region:hover .genecode-sequence-primer-shape,
+.genecode-sequence-hit-region:focus-visible .genecode-sequence-primer-shape { fill: #faf0fe; stroke-width: 2; }
+.genecode-sequence-feature:hover .genecode-sequence-feature-shape,
+.genecode-sequence-feature:focus-visible .genecode-sequence-feature-shape {
+  fill-opacity: .24;
+  stroke-opacity: 1;
+  stroke-width: 1.6;
+}
+.genecode-sequence-feature--selected .genecode-sequence-feature-shape {
+  fill-opacity: .28;
+  stroke-opacity: 1;
+  stroke-width: 1.8;
+}
+.genecode-sequence-feature--selected .genecode-sequence-feature-label { font-weight: 650; }
+.genecode-sequence-feature:focus-visible,
+.genecode-sequence-label-group:focus-visible { outline: none; }
+.genecode-sequence-overflow-control { cursor: pointer; }
+.genecode-sequence-overflow-control rect { fill: #f1f5f2; stroke: transparent; }
+.genecode-sequence-overflow-control:hover rect,
+.genecode-sequence-overflow-control:focus-visible rect { fill: #e6f1ea; stroke: #88b19e; }
+.genecode-sequence-overflow-control:focus-visible { outline: none; }
+.genecode-sequence-overflow-control .genecode-sequence-overflow-label {
+  fill: #38614f;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
 }
 
 .genecode-sequence-label-text.genecode-sequence-label-primers {
@@ -167,4 +213,18 @@
 .genecode-sequence-row:focus-visible {
   outline: 2px solid #2376b7;
   outline-offset: -2px;
+}
+
+/* The panel drives selection through its own mouse handling and painted
+   highlight rects, so native browser text selection only fights it — an
+   I-beam over the bases reads as "selecting text" instead of using the
+   instrument. Mirror LinearView's user-select contract here. */
+.genecode-sequence-panel,
+.genecode-sequence-panel text {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.genecode-sequence-panel {
+  cursor: default;
 }

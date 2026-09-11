@@ -231,6 +231,7 @@ describe("SettingsPanel", () => {
     updater.check.mockResolvedValue({ kind: "current" });
     render(<SettingsPanel onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole("button", { name: /应用更新/ }));
     expect(await screen.findByText("当前版本 v0.1.0")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "检查更新" }));
 
@@ -252,6 +253,7 @@ describe("SettingsPanel", () => {
     });
     render(<SettingsPanel onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole("button", { name: /应用更新/ }));
     fireEvent.click(screen.getByRole("button", { name: "检查更新" }));
     expect(await screen.findByText("发现新版本 v0.2.0")).toBeTruthy();
     expect(screen.getByText("12 MB")).toBeTruthy();
@@ -269,6 +271,7 @@ describe("SettingsPanel", () => {
     });
     render(<SettingsPanel onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole("button", { name: /应用更新/ }));
     fireEvent.click(screen.getByRole("button", { name: "检查更新" }));
     expect(await screen.findByText(/尚未配置更新服务器/)).toBeTruthy();
   });
@@ -277,6 +280,7 @@ describe("SettingsPanel", () => {
     bridge.desktop = false;
     render(<SettingsPanel onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole("button", { name: /应用更新/ }));
     expect(await screen.findByText(/自动更新仅在桌面应用中可用/)).toBeTruthy();
     expect((screen.getByRole("button", { name: "检查更新" }) as HTMLButtonElement).disabled)
       .toBe(true);

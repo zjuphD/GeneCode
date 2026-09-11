@@ -121,6 +121,9 @@ export function ConstructReview({ candidate }: { candidate: ResultCandidate }) {
 
       {model.summary && <p className="agent-construct-review__summary">{model.summary}</p>}
 
+      <details className="agent-disclosure agent-construct-review__expanded">
+      <summary>连接位点与载体引物</summary>
+
       <div className="agent-construct-review__facts">
         {model.fragmentCount > 1 && <span>{model.fragmentCount} 个片段 · {model.fragmentCount * 2} 条引物</span>}
         {model.insertLength !== null && <span>插入片段 {model.insertLength.toLocaleString()} bp</span>}
@@ -149,6 +152,7 @@ export function ConstructReview({ candidate }: { candidate: ResultCandidate }) {
       {model.backboneLinearization && (
         <BackboneLinearizationCard model={model.backboneLinearization} />
       )}
+      </details>
 
       <details className="agent-construct-review__details">
         <summary>查看引物结构与自动检查</summary>

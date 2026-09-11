@@ -12,6 +12,7 @@
   --color-bg: #f1f4f6;
   --color-surface: #f8fafb;
   --color-surface-raised: #ffffff;
+  --color-bg-subtle: #eef2f5;
   --color-border: #d5dce4;
   --color-border-subtle: #e5e9ee;
   --color-selection: #eaf2f9;
@@ -81,6 +82,52 @@
 
   font-size: 14px;
   line-height: 1.45;
+}
+
+/* Dark theme — deep charcoal chrome around deliberately light canvases
+   (Benchling/IGV pattern). Applied by ui/themePreference via <html data-theme>.
+   Bio/amino palette stays put: those colors live on the light canvases. */
+[data-theme="dark"] {
+  --color-bg: #14181d;
+  --color-surface: #191f26;
+  --color-surface-raised: #1f2630;
+  --color-bg-subtle: #232b35;
+  --color-border: #333d49;
+  --color-border-subtle: #28313c;
+  --color-selection: #1c2f4a;
+  --color-selection-border: #31527e;
+
+  --color-text: #e8edf2;
+  --color-text-secondary: #9fb0bf;
+  --color-text-muted: #7e90a0;
+
+  --color-command: #2b3642;
+  --color-command-hover: #3a4756;
+  --color-command-active: #222b34;
+
+  --color-accent: #5aa2dc;
+  --color-accent-hover: #7ab6e8;
+  --color-accent-subtle: #16283c;
+
+  --color-status: #d9a441;
+  --color-status-bg: #29200f;
+
+  --color-success: #55b377;
+  --color-success-bg: #12241a;
+  --color-success-border: #27503a;
+
+  --color-danger: #e07b7b;
+  --color-danger-bg: #2a1517;
+  --color-danger-border: #5a2c2e;
+
+  --color-on-danger: #ffffff;
+
+  --color-warning: #d9a441;
+  --color-warning-bg: #29200f;
+  --color-warning-border: #57431d;
+
+  --sidebar-bg: #161b21;
+  --agent-bg: #161b21;
 }
 
 html,
@@ -166,7 +213,7 @@ body,
   align-items: center;
   background: transparent;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -242,7 +289,7 @@ body,
 .sidebar-annotation-filters {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   display: grid;
   flex: 0 0 auto;
   gap: 0;
@@ -254,7 +301,7 @@ body,
 .sidebar-annotation-filters button {
   background: transparent;
   border: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
@@ -408,7 +455,7 @@ body,
 .editor-empty code {
   background: var(--color-surface);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 11.5px;
   border: 1px solid var(--color-border-subtle);
 }
@@ -464,7 +511,7 @@ body,
   color: var(--color-text-muted);
   padding: 1px 6px;
   background: var(--color-bg);
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
   white-space: nowrap;
@@ -478,7 +525,7 @@ body,
 .editor-toolbar__view-toggle {
   display: flex;
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -556,7 +603,7 @@ body,
   align-items: center;
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   display: inline-flex;
   overflow: hidden;
 }
@@ -580,7 +627,7 @@ body,
 .ove-translation-filter select {
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
@@ -815,7 +862,7 @@ body,
   color: var(--color-accent);
   padding: 1px 6px;
   background: var(--color-accent-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   white-space: nowrap;
 }
 
@@ -825,7 +872,7 @@ body,
   padding: 1px 6px;
   background: var(--color-danger-bg);
   border: 1px solid var(--color-danger-border);
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: help;
   white-space: nowrap;
 }
@@ -853,7 +900,7 @@ body,
 .doc-toolbar__btn {
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 1px 8px;
   font-size: 11px;
   cursor: pointer;
@@ -904,7 +951,7 @@ body,
   color: var(--color-text-muted);
   padding: 1px 6px;
   background: var(--color-bg);
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
   white-space: nowrap;
@@ -918,7 +965,7 @@ body,
 .doc-toolbar__status {
   font-size: 11px;
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1015,7 +1062,7 @@ body,
 .agent-toggle {
   background: none;
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 9px;
   color: var(--color-text-muted);
@@ -1072,7 +1119,7 @@ body,
 
 .agent-btn {
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 2px 8px;
   font-size: 11px;
   cursor: pointer;
@@ -1197,7 +1244,7 @@ body,
   font-size: 10.5px;
   background: var(--color-danger-bg);
   border: 1px solid var(--color-danger-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 4px 6px;
 }
 
@@ -1206,7 +1253,7 @@ body,
   font-size: 10.5px;
   background: var(--color-status-bg);
   border: 1px solid var(--color-warning-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 4px 6px;
 }
 
@@ -1231,7 +1278,7 @@ body,
 
 .patch-preview__btn {
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 2px 10px;
   font-size: 11px;
   cursor: pointer;
@@ -1508,7 +1555,7 @@ body,
 }
 
 .patch-preview__bio-chip {
-  border-radius: 3px;
+  border-radius: 4px;
   display: inline-block;
   font-size: 9px;
   font-weight: 600;
@@ -1649,7 +1696,7 @@ body,
 
 .diff-tooltip__seq {
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  border-radius: 4px;
   color: #ffffff;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 10px;
@@ -1761,7 +1808,7 @@ body,
 .sandbox-diff__stat {
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
@@ -2069,7 +2116,7 @@ body,
 /* Plan provenance badge (design doc §6.3) — which track planned the execute. */
 .agent-planned-by {
   align-self: flex-start;
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -2136,7 +2183,7 @@ body,
 
 .agent-context__meta span {
   background: var(--color-accent-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-accent);
   font-size: 10px;
   line-height: 1.4;
@@ -2154,7 +2201,7 @@ body,
   align-items: center;
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-muted);
   display: flex;
   flex-direction: column;
@@ -2493,7 +2540,7 @@ body,
 .agent-construct-review__status,
 .agent-construct-check__status {
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   flex-shrink: 0;
   font-size: 9.5px;
   font-weight: 600;
@@ -2539,7 +2586,7 @@ body,
 .agent-construct-review__facts span {
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   font-size: 9.5px;
   padding: 2px 5px;
@@ -2591,7 +2638,7 @@ body,
 .agent-backbone-linearization__facts span {
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   font-size: 9px;
   padding: 2px 4px;
@@ -2625,7 +2672,7 @@ body,
 .agent-backbone-linearization__primer code {
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text);
   display: block;
   font-size: 9.5px;
@@ -2680,7 +2727,7 @@ body,
 .agent-primer-architecture code {
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text);
   display: block;
   font-size: 9.5px;
@@ -2787,7 +2834,7 @@ body,
 .agent-primer-explanation__overall,
 .agent-primer-review__status {
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   flex-shrink: 0;
   font-size: 9.5px;
   font-weight: 600;
@@ -3264,7 +3311,7 @@ body,
 .agent-cloning-setup__fragment {
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 6px;
 }
 
@@ -3394,7 +3441,7 @@ body,
 .agent-candidate__metrics span {
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   font-size: 10px;
   line-height: 1.3;
@@ -3441,7 +3488,7 @@ body,
   color: var(--color-accent);
   background: var(--color-accent-subtle);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   display: inline-block;
 }
 
@@ -3480,7 +3527,7 @@ body,
   font-size: 10px;
   background: rgba(0, 0, 0, 0.06);
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
   word-break: break-all;
 }
 
@@ -3497,7 +3544,7 @@ body,
   color: var(--color-danger);
   background: var(--color-danger-bg);
   border: 1px solid var(--color-danger-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 4px 8px;
   margin-bottom: 8px;
 }
@@ -3536,7 +3583,7 @@ body,
   align-items: center;
   background: var(--color-accent-subtle);
   border: 1px solid #c7d7e7;
-  border-radius: 5px;
+  border-radius: 6px;
   display: flex;
   gap: 8px;
   justify-content: space-between;
@@ -3850,6 +3897,103 @@ body,
   font-weight: 600;
 }
 
+/* Agent starter tasks: compact, intentional task entry points rather than
+   unstyled browser buttons. The primary cloning entry occupies the first row;
+   the remaining common tasks form an even 2 × 2 matrix in the narrow sidebar. */
+.agent-starter-grid {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.agent-starter-card {
+  align-items: center;
+  appearance: none;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  gap: 0 7px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  min-height: 58px;
+  min-width: 0;
+  padding: 8px 9px;
+  position: relative;
+  text-align: left;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.agent-starter-card--primary {
+  background: linear-gradient(135deg, var(--color-accent-subtle), var(--color-surface-raised) 72%);
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+  grid-column: 1 / -1;
+  min-height: 62px;
+}
+
+.agent-starter-card__icon {
+  align-items: center;
+  background: var(--color-accent-subtle);
+  border-radius: 7px;
+  color: var(--color-accent);
+  display: inline-flex;
+  grid-row: 1 / span 2;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+
+.agent-starter-card--primary .agent-starter-card__icon {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.agent-starter-card__icon svg {
+  height: 15px;
+  width: 15px;
+}
+
+.agent-starter-card__label {
+  align-self: end;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.agent-starter-card__hint {
+  align-self: start;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.agent-starter-card:hover:not(:disabled) {
+  background: var(--color-accent-subtle);
+  border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-border));
+  box-shadow: 0 4px 12px rgba(68, 85, 128, 0.12);
+  transform: translateY(-1px);
+}
+
+.agent-starter-card:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0) scale(0.985);
+}
+
+.agent-starter-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.agent-starter-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
 .agent-starter-menu {
   position: relative;
 }
@@ -3928,7 +4072,7 @@ body,
 .agent-task-type strong {
   background: var(--color-accent-subtle);
   border: 1px solid #c7d7e7;
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-accent);
   font-size: 9.5px;
   font-weight: 600;
@@ -3958,7 +4102,7 @@ body,
   margin-top: 4px;
   padding: 2px;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--color-surface);
 }
 
@@ -3971,7 +4115,7 @@ body,
   min-height: 26px;
   padding: 3px 6px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   font-size: 11px;
@@ -4032,7 +4176,7 @@ body,
 
 .agent-mode-trigger {
   align-items: center;
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid #cfd7df;
   border-radius: 999px;
   color: var(--color-text);
@@ -4076,7 +4220,7 @@ body,
 }
 
 .agent-mode-menu {
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid #20252b;
   border-radius: 8px;
   bottom: calc(100% + 8px);
@@ -4093,7 +4237,7 @@ body,
 
 .agent-mode-option {
   align-items: flex-start;
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 0;
   color: var(--color-text);
   cursor: pointer;
@@ -4209,7 +4353,7 @@ body,
 
 .agent-replan__badge {
   display: inline-block;
-  border-radius: 3px;
+  border-radius: 4px;
   background: color-mix(in srgb, var(--color-accent, #4f7cff) 14%, transparent);
   color: var(--color-accent, #4f7cff);
   border: 1px solid color-mix(in srgb, var(--color-accent, #4f7cff) 45%, transparent);
@@ -4376,7 +4520,7 @@ body,
   color: var(--color-text-tertiary, #aaa);
   padding: 1px 4px;
   background: var(--color-bg-subtle, #f0f0f0);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .agent-artifacts__download {
@@ -4655,7 +4799,7 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0;
 }
 
@@ -4671,7 +4815,7 @@ body,
   flex: 1;
   padding: 2px 4px;
   border: 1px solid var(--color-accent, #4a90d9);
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 12px;
   font-family: inherit;
   background: var(--color-bg, #fff);
@@ -4993,14 +5137,14 @@ body,
   color: var(--color-text-secondary, #666);
   background: var(--color-bg, #fff);
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .settings-detail__row kbd {
   font-size: 11px;
   padding: 1px 6px;
   border: 1px solid var(--color-border, #ddd);
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--color-bg, #fff);
   font-family: inherit;
 }
@@ -5180,14 +5324,14 @@ body,
 
 .settings-progress__track {
   height: 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--color-border-subtle, #eef1f4);
   overflow: hidden;
 }
 
 .settings-progress__fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--color-accent, #1863a0);
   transition: width 0.2s ease;
 }
@@ -5258,7 +5402,7 @@ select {
 }
 
 .top-bar {
-  background: #ffffff;
+  background: var(--color-surface);
   gap: 8px;
   padding: 0 10px;
 }
@@ -5268,7 +5412,7 @@ select {
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -5417,7 +5561,7 @@ select {
 
 .sidebar-project {
   border-left: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   gap: 3px;
   min-height: 52px;
   padding: 0 4px 0 0;
@@ -5503,9 +5647,9 @@ select {
 
 .sidebar-search {
   align-items: center;
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   display: flex;
   gap: 6px;
   margin: 0 9px 8px;
@@ -5558,7 +5702,7 @@ select {
 }
 
 .doc-toolbar {
-  background: #ffffff;
+  background: var(--color-surface);
   flex-wrap: wrap;
   gap: 12px;
   min-height: 44px;
@@ -5670,7 +5814,7 @@ select {
 }
 
 .sequence-tools__menu {
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   box-shadow: 0 12px 30px rgba(17, 24, 39, 0.16);
@@ -5806,7 +5950,7 @@ select {
 .sequence-tools__section--restriction div span {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   font-size: 9.5px;
   padding: 3px 5px;
@@ -5862,7 +6006,7 @@ select {
 .verification-dialog__icon {
   align-items: center;
   background: var(--color-accent-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-accent);
   display: flex;
   height: 34px;
@@ -6060,7 +6204,7 @@ select {
 
 .verification-trace-badge {
   background: var(--color-command-bg);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-command);
   font-size: 10px;
   padding: 3px 7px;
@@ -6207,7 +6351,7 @@ select {
 .verification-changes__header span {
   background: #ffffff;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-muted);
   font-size: 9.5px;
   padding: 2px 5px;
@@ -6283,8 +6427,9 @@ select {
    SnapGene-style command row (.doc-toolbar-row); OVE's native commands share
    the contextual sequence toolbar on desktop. */
 .top-bar__document {
-  flex: 0 1 260px;
-  max-width: 320px;
+  flex: 1 1 auto;
+  max-width: none;
+  min-width: 0;
 }
 
 .ove-view-toolbar {
@@ -6452,8 +6597,9 @@ select {
 }
 
 .top-bar__document {
-  flex: 0 1 260px;
-  max-width: 320px;
+  flex: 1 1 auto;
+  max-width: none;
+  min-width: 0;
 }
 
 .ove-view-toolbar {
@@ -6519,7 +6665,7 @@ select {
 }
 
 .agent-pinned-summary {
-  background: color-mix(in srgb, var(--agent-bg) 96%, white);
+  background: color-mix(in srgb, var(--agent-bg) 96%, var(--color-text));
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 4px 10px rgba(23, 33, 43, 0.04);
   margin: 0 -12px;
@@ -6859,7 +7005,9 @@ select {
 
 .editor-start {
   align-items: center;
-  background: #ffffff;
+  background:
+    radial-gradient(1100px 460px at 50% -12%, var(--color-accent-subtle), transparent 62%),
+    var(--color-bg);
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -6879,23 +7027,33 @@ select {
   align-items: center;
   background: var(--color-selection);
   border: 1px solid var(--color-selection-border);
-  border-radius: 6px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(23, 33, 43, 0.10);
   color: var(--color-accent);
   display: inline-flex;
-  height: 48px;
+  height: 56px;
   justify-content: center;
-  margin-bottom: 14px;
-  width: 48px;
+  margin-bottom: 16px;
+  width: 56px;
 }
 
 .editor-start__icon svg {
-  height: 24px;
-  width: 24px;
+  height: 26px;
+  width: 26px;
+}
+
+.editor-start__kicker {
+  color: var(--color-text-muted);
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  margin-bottom: 9px;
 }
 
 .editor-start h1 {
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 650;
   letter-spacing: 0;
   line-height: 1.25;
@@ -6909,42 +7067,64 @@ select {
 
 .editor-start__actions {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 24px;
-  max-width: 620px;
+  margin-top: 28px;
+  max-width: 640px;
   width: 100%;
 }
 
 .editor-start__action {
   align-items: center;
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   color: var(--color-text);
   cursor: pointer;
   display: flex;
   gap: 12px;
-  min-height: 70px;
-  padding: 12px 14px;
+  min-height: 74px;
+  padding: 13px 15px;
   text-align: left;
+  transition:
+    transform 130ms ease,
+    box-shadow 130ms ease,
+    background-color 130ms ease,
+    border-color 130ms ease;
 }
 
 .editor-start__action:hover {
-  background: var(--color-surface);
-  border-color: #b9c5d2;
+  background: var(--color-surface-raised);
+  border-color: var(--color-selection-border);
+  box-shadow: 0 6px 16px rgba(23, 33, 43, 0.08);
+  transform: translateY(-1px);
 }
 
 .editor-start__action--primary {
-  border-color: #b6cbe1;
-  box-shadow: inset 3px 0 0 var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
-.editor-start__action > svg {
+.editor-start__glyph {
+  align-items: center;
+  background: var(--color-selection);
+  border-radius: 6px;
   color: var(--color-accent);
+  display: inline-flex;
   flex: 0 0 auto;
-  height: 20px;
-  width: 20px;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.editor-start__glyph svg {
+  height: 18px;
+  width: 18px;
+}
+
+.editor-start__action--primary .editor-start__glyph {
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .editor-start__action span {
@@ -7025,7 +7205,7 @@ select {
 .paste-sequence textarea {
   background: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text);
   font: inherit;
   padding: 8px 10px;
@@ -7089,7 +7269,7 @@ select {
 .create-feature-dialog select {
   background: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text);
   font: inherit;
   min-height: 35px;
@@ -7139,7 +7319,7 @@ select {
 .cloning-wizard__field textarea {
   background: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text);
   font: inherit;
   min-height: 35px;
@@ -7175,7 +7355,7 @@ select {
 .cloning-wizard__source-toggle label {
   align-items: center;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   font-size: 11.5px;
@@ -7227,7 +7407,7 @@ select {
 
 .cloning-wizard__result-meta {
   background: var(--color-accent-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-accent);
   font-size: 10.5px;
   padding: 2px 7px;
@@ -7269,7 +7449,7 @@ select {
 
 .cloning-wizard__junction {
   border: 1px solid var(--color-border-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   display: grid;
   gap: 4px;
   padding: 7px 9px;
@@ -7324,7 +7504,7 @@ select {
 }
 
 .cloning-wizard__check-status {
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 9.5px;
   font-weight: 600;
   padding: 1px 5px;
@@ -7401,7 +7581,7 @@ select {
 .editor-start__primary,
 .editor-start__secondary {
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   font: inherit;
   min-height: 34px;
@@ -7450,7 +7630,7 @@ select {
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-muted);
   display: inline-flex;
   height: 30px;
@@ -7588,7 +7768,7 @@ select {
 .agent-mode-selector select {
   background: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   font: inherit;
   font-size: 11.5px;
@@ -7716,7 +7896,7 @@ select {
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-muted);
   cursor: pointer;
   display: inline-flex;
@@ -7929,7 +8109,7 @@ select {
   align-items: center;
   background: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -7987,7 +8167,7 @@ select {
 
 .inspector-primer__header span {
   background: var(--color-accent-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-accent);
   font-size: 9px;
   padding: 2px 5px;
@@ -8273,7 +8453,7 @@ select {
 }
 
 .agent-context-node {
-  background: color-mix(in srgb, var(--agent-bg) 94%, white);
+  background: color-mix(in srgb, var(--agent-bg) 94%, var(--color-text));
   border-bottom: 1px solid var(--color-border-subtle);
   padding: 8px 0 7px;
   position: sticky;
@@ -8518,7 +8698,7 @@ select {
 .agent-conversation-history-panel__close {
   background: transparent;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-muted);
   cursor: pointer;
   font: inherit;
@@ -8572,7 +8752,7 @@ select {
 .agent-conversation-history-panel__continue {
   background: var(--color-accent-subtle);
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-accent);
   cursor: pointer;
   flex: 0 0 auto;
@@ -8724,7 +8904,7 @@ select {
   align-self: center;
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -9207,7 +9387,7 @@ select {
    like one continuous desktop editor. */
 .document-tabs {
   align-items: stretch;
-  background: #edf1f4;
+  background: var(--color-bg-subtle);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   flex: 0 0 34px;
@@ -9231,7 +9411,7 @@ select {
 
 .document-tab {
   align-items: stretch;
-  background: #e3e8ec;
+  background: var(--color-surface);
   border-left: 1px solid transparent;
   border-right: 1px solid transparent;
   display: flex;
@@ -9241,7 +9421,7 @@ select {
 }
 
 .document-tab--active {
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border-left-color: var(--color-border);
   border-right-color: var(--color-border);
   box-shadow: inset 0 2px 0 var(--color-accent);
@@ -9263,7 +9443,7 @@ select {
 }
 
 .document-tab__select:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--color-bg-subtle);
 }
 
 .document-tab--active .document-tab__select {
@@ -9339,12 +9519,12 @@ select {
 /* The OVE view controls become a contextual toolbar; the view switcher sits
    at the bottom like SnapGene's Map / Sequence / Both navigation. */
 .ove-editor-shell {
-  background: #ffffff;
+  background: var(--color-surface-raised);
 }
 
 .ove-view-toolbar {
   align-items: center;
-  background: #eef2f5;
+  background: var(--color-bg-subtle);
   border-bottom: 1px solid var(--color-border);
   flex: 0 0 34px;
   gap: 8px;
@@ -9371,9 +9551,9 @@ select {
 
 .ove-enzyme-filter select,
 .ove-translation-filter select {
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border-color: #c8d2db;
-  border-radius: 3px;
+  border-radius: 4px;
   height: 27px;
 }
 
@@ -9390,9 +9570,9 @@ select {
 
 .ove-enzyme-menu__trigger {
   align-items: center;
-  background: #ffffff;
+  background: var(--color-surface-raised);
   border: 1px solid #c8d2db;
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -9539,7 +9719,7 @@ select {
 
 .ove-tool-rail {
   align-items: center;
-  background: #f3f6f8;
+  background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex: 0 0 36px;
@@ -9552,7 +9732,7 @@ select {
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -9569,8 +9749,8 @@ select {
 }
 
 .ove-tool-rail__button--active {
-  background: #dce9f2;
-  border-color: #b7ccdc;
+  background: var(--color-selection);
+  border-color: var(--color-selection-border);
   color: var(--color-accent);
 }
 
@@ -9646,7 +9826,7 @@ select {
 .ove-feature-overview__feature {
   background: transparent;
   border: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
   cursor: pointer;
   display: block;
@@ -9694,7 +9874,7 @@ select {
 }
 
 .ove-feature-overview__tooltip-swatch {
-  border-radius: 3px;
+  border-radius: 4px;
   flex: 0 0 auto;
   height: 11px;
   width: 11px;
@@ -9731,6 +9911,35 @@ select {
   padding: 0 8px;
 }
 
+/* Keep the bottom navigation on one row.  The map/sequence switcher and the
+   feature/history shortcuts are sibling groups; without an explicit flex
+   layout the latter flowed onto a second line below the 33 px footer. */
+.ove-view-footer__left,
+.ove-view-footer__center,
+.ove-view-footer__right,
+.ove-view-footer__panels {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.ove-view-footer__center {
+  align-self: stretch;
+  flex: 0 1 auto;
+}
+
+.ove-view-footer__panels {
+  align-self: stretch;
+  border-left: 1px solid #d5dfe6;
+  margin-left: 6px;
+  padding-left: 6px;
+}
+
+.ove-view-footer__right {
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
 .ove-view-footer .ove-view-segmented {
   align-self: stretch;
   background: transparent;
@@ -9762,6 +9971,34 @@ select {
   border-bottom-color: var(--color-accent);
   color: var(--color-accent);
   font-weight: 650;
+}
+
+@container (max-width: 720px) {
+  .ove-molecule-chip__meta,
+  .ove-view-footer__right .ove-footer-check {
+    display: none;
+  }
+
+  .ove-view-footer__panels {
+    margin-left: 2px;
+    padding-left: 2px;
+  }
+
+  .ove-view-footer .ove-view-button {
+    padding: 0 9px;
+  }
+}
+
+@container (max-width: 480px) {
+  .ove-view-footer__left,
+  .ove-view-footer__panels,
+  .ove-view-footer__right .ove-footer-chip {
+    display: none;
+  }
+
+  .ove-view-footer__center {
+    margin: 0 auto;
+  }
 }
 
 
@@ -10321,7 +10558,7 @@ select {
 .agent-step-dag__tooltip {
   background: var(--color-tooltip-bg, #202a37);
   border: 1px solid var(--color-border, #3a4654);
-  border-radius: 5px;
+  border-radius: 6px;
   bottom: calc(100% + 7px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   color: var(--color-tooltip-text, #eaf0f6);
@@ -10397,7 +10634,7 @@ select {
 .agent-step-dag__edge-popover {
   background: var(--color-tooltip-bg, #202a37);
   border: 1px solid var(--color-border, #3a4654);
-  border-radius: 5px;
+  border-radius: 6px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   color: var(--color-tooltip-text, #eaf0f6);
   display: flex;
@@ -10704,7 +10941,7 @@ select {
   align-items: flex-start;
   background: transparent;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   display: flex;
   font: inherit;
@@ -10786,7 +11023,7 @@ select {
 .agent-step-flow__event-title code {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--color-text-muted);
   font-size: 9px;
   padding: 1px 4px;
@@ -10842,5 +11079,919 @@ select {
   .agent-step-flow__event--active .agent-step-flow__event-icon,
   .agent-step-flow__thinking > span:first-child {
     animation: none;
+  }
+}
+
+/* ============================================================
+   Motion layer — one interaction language across the shell.
+   Color-only transitions (never geometry) so dense layouts hold
+   still, plus a visible keyboard focus ring. The global
+   prefers-reduced-motion guard below keeps every transition and
+   animation inert for users who opt out of motion.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  button,
+  [role="button"],
+  [role="tab"],
+  a,
+  summary,
+  select,
+  .document-tab,
+  .doc-toolbar__btn {
+    transition: background-color 130ms ease, border-color 130ms ease,
+      color 130ms ease, box-shadow 130ms ease, fill 130ms ease;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Chrome refinement pass — GeneCode-owned toolbar & view switch.
+   OVE's internal Blueprint toolbar is intentionally untouched.
+   Flat quiet buttons ride the shared tokens and the motion layer;
+   save carries the row's single quiet accent; the view segmented
+   control reads as one raised-on-track unit instead of loose tabs.
+   ============================================================ */
+
+.doc-toolbar__btn {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.doc-toolbar__btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.doc-toolbar__btn:hover {
+  background: var(--color-bg-subtle);
+  border-color: transparent;
+  color: var(--color-text);
+}
+
+.doc-toolbar__btn:active {
+  background: var(--color-selection);
+  border-color: var(--color-selection-border);
+}
+
+.doc-toolbar__btn--save {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.doc-toolbar__btn--save:hover {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-hover);
+}
+
+.ove-view-segmented,
+.ove-view-footer .ove-view-segmented {
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.ove-view-segmented .ove-view-button + .ove-view-button {
+  border-left: none;
+}
+
+.ove-view-segmented .ove-view-button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  height: 24px;
+}
+
+.ove-view-segmented .ove-view-button:hover:not(:disabled):not(.ove-view-button--active) {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.ove-view-segmented .ove-view-button--active {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 2px rgba(23, 33, 43, 0.10);
+  color: var(--color-text);
+}
+
+/* ============================================================
+   Sidebar refinement pass — library rows read like genome-
+   browser feature tracks: slim color bars, tabular coordinates,
+   quiet rounded rows; empty states become intentional panels.
+   ============================================================ */
+
+.sidebar-detail-list {
+  gap: 1px;
+  padding: 2px 0;
+}
+
+.sidebar-feature {
+  border-bottom: none;
+  border-radius: 4px;
+  min-height: 32px;
+  padding: 6px 8px;
+}
+
+.sidebar-feature:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+}
+
+.sidebar-feature--selected {
+  background: var(--color-selection);
+  color: var(--color-accent);
+}
+
+.sidebar-feature__swatch {
+  border: none;
+  border-radius: 2px;
+  flex: 0 0 4px;
+  height: 18px;
+  width: 4px;
+}
+
+.sidebar-feature small {
+  color: var(--color-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar-feature--selected small {
+  color: var(--color-accent);
+}
+
+.sidebar-empty {
+  font-size: 12px;
+  padding: 10px 8px;
+}
+
+.sidebar-empty--padded {
+  background: var(--color-surface-raised);
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  margin: 8px 6px;
+  padding: 24px 14px;
+  text-align: center;
+}
+
+/* Dark theme keeps the drawing surface as a pure-white lightbox card:
+   the plasmid map's own labels are dark ink and need the light ground
+   (Benchling/IGV pattern). Chrome around it stays dark. */
+[data-theme="dark"] .ove-editor-canvas {
+  background: #ffffff;
+  /* OVE glyphs inherit currentColor from the shell, which is light ink
+     under the dark theme — put dark ink back over the white card. */
+  color: #17212b;
+}
+
+/* The view footer is chrome, not canvas — keep it dark around the white
+   lightbox card instead of inheriting the card's ink reset. */
+[data-theme="dark"] .ove-view-footer {
+  background: var(--color-surface);
+}
+
+/* ============================================================
+   Glass theme — macOS vibrancy variant of the light theme.
+   The native window blur shows through only where the shell
+   paints translucent surfaces (tab strip / top bar / sidebar);
+   every work surface stays opaque. ui/themePreference toggles
+   the window material through set_glass; non-macOS and browser
+   preview degrade to the plain light theme.
+   ============================================================ */
+[data-theme="glass"] {
+  --color-bg: transparent;
+  --sidebar-bg: rgba(247, 249, 251, 0.62);
+}
+
+[data-theme="glass"] .document-tabs,
+[data-theme="glass"] .top-bar,
+[data-theme="glass"] .sidebar {
+  background: rgba(247, 249, 251, 0.62);
+  -webkit-backdrop-filter: saturate(1.8) blur(22px);
+  backdrop-filter: saturate(1.8) blur(22px);
+}
+
+/* ============================================================
+   Agent / settings refinement
+   A calmer scientific workbench: fewer competing surfaces, readable
+   evidence cards, and a settings rail that can grow with the product.
+   ============================================================ */
+:root {
+  --agent-expanded-width: 460px;
+}
+
+.agent-panel--wide {
+  width: 620px;
+}
+
+.agent-header {
+  min-height: 58px;
+  padding: 11px 14px 10px 16px;
+  background: color-mix(in srgb, var(--agent-bg) 92%, var(--color-accent));
+  border-bottom-color: color-mix(in srgb, var(--color-border) 75%, var(--color-accent));
+}
+
+.agent-header__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.agent-header__status-label {
+  font-size: 11px;
+}
+
+.agent-header__subtitle,
+.agent-planned-by {
+  font-size: 10px;
+}
+
+.agent-btn.agent-btn--icon,
+.agent-toggle {
+  border-radius: 8px;
+  min-height: 30px;
+  min-width: 30px;
+  height: 30px;
+  width: 30px;
+}
+
+.agent-btn.agent-btn--icon svg,
+.agent-toggle svg {
+  height: 17px;
+  width: 17px;
+}
+
+.agent-body {
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.task-stream {
+  gap: 4px;
+  padding: 4px 14px 14px;
+}
+
+.task-node {
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.task-node__header {
+  min-height: 30px;
+  padding: 5px 8px;
+}
+
+.task-node__dot {
+  height: 8px;
+  width: 8px;
+}
+
+.task-node__label {
+  font-size: 12.5px;
+  letter-spacing: -0.005em;
+}
+
+.task-node__detail {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.task-node__content {
+  gap: 5px;
+  padding: 3px 8px 8px 24px;
+}
+
+.agent-context-node {
+  background: color-mix(in srgb, var(--agent-bg) 88%, var(--color-accent));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, var(--color-accent));
+  border-radius: 0 0 10px 10px;
+  padding: 10px 0 8px;
+}
+
+.agent-context-node > .task-node__header,
+.agent-objective-node > .task-node__header {
+  min-height: 28px;
+  padding: 2px 8px;
+}
+
+.agent-context-node > .task-node__content,
+.agent-objective-node > .task-node__content {
+  padding: 2px 8px 5px 24px;
+}
+
+.agent-objective-node {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 7px 0 8px;
+}
+
+.agent-welcome {
+  gap: 10px;
+  padding: 14px 8px 14px 24px;
+}
+
+.agent-welcome__greeting {
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.agent-welcome__description,
+.agent-welcome__sub {
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.agent-welcome__section-label {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.agent-starter-grid {
+  gap: 8px;
+}
+
+.agent-starter-card {
+  min-height: 56px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-surface-raised) 88%, var(--color-accent));
+  border-color: var(--color-border-subtle);
+}
+
+.agent-starter-card--primary {
+  min-height: 64px;
+  background: color-mix(in srgb, var(--color-accent-subtle) 72%, var(--color-surface-raised));
+}
+
+.agent-starter-card__label {
+  font-size: 12px;
+}
+
+.agent-starter-card__hint {
+  font-size: 10.5px;
+}
+
+.agent-starter-card__icon {
+  height: 30px;
+  width: 30px;
+}
+
+.agent-starter-card__icon svg {
+  height: 17px;
+  width: 17px;
+}
+
+.agent-step-flow {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  margin: 8px 0 10px;
+  padding: 10px 10px 11px;
+}
+
+.agent-step-flow__status {
+  min-height: 32px;
+}
+
+.agent-step-flow__label {
+  display: inline;
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+  text-transform: uppercase;
+}
+
+.agent-step-flow__status strong {
+  font-size: 12.5px;
+}
+
+.agent-step-flow__thought {
+  font-size: 12px;
+  margin-left: 28px;
+}
+
+.agent-step-flow__summary {
+  font-size: 11.5px;
+  margin-left: 28px;
+}
+
+.agent-step-flow__event {
+  min-height: 32px;
+  padding: 5px 6px 5px 0;
+}
+
+.agent-step-flow__event-title {
+  font-size: 11.5px;
+}
+
+.agent-step-flow__event-detail {
+  font-size: 11px;
+}
+
+.agent-step-flow__event-title code {
+  font-size: 9.5px;
+  opacity: 0.72;
+}
+
+.agent-composer {
+  margin-top: 10px;
+  padding: 10px 14px 14px;
+  background: color-mix(in srgb, var(--agent-bg) 94%, var(--color-accent));
+  border-top-color: color-mix(in srgb, var(--color-border) 72%, var(--color-accent));
+}
+
+.agent-composer__input {
+  min-height: 86px;
+  height: 86px;
+  padding: 11px 12px 40px;
+  border-radius: 11px;
+  font-size: 13px;
+  line-height: 1.55;
+  background: var(--color-surface-raised);
+}
+
+.agent-composer__send,
+.agent-composer__attach {
+  bottom: 20px;
+}
+
+.agent-composer__send {
+  min-height: 32px;
+  min-width: 70px;
+  border-radius: 8px;
+}
+
+.agent-composer__attach {
+  left: 24px;
+}
+
+.agent-conversation-history > summary,
+.agent-worklog > summary {
+  min-height: 34px;
+  font-size: 11.5px;
+}
+
+.task-activity__text {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.agent-input-dock {
+  background: color-mix(in srgb, var(--agent-bg) 94%, var(--color-accent));
+  border-top-color: color-mix(in srgb, var(--color-border) 72%, var(--color-accent));
+}
+
+.agent-panel button:focus-visible,
+.settings-panel button:focus-visible,
+.settings-panel input:focus-visible,
+.settings-panel select:focus-visible,
+.settings-panel summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-accent) 72%, white);
+  outline-offset: 2px;
+}
+
+/* Two-column settings navigation inspired by Grok's information architecture,
+   while retaining GeneCode's light scientific workbench palette. */
+.settings-panel {
+  width: min(760px, calc(100vw - 20px));
+}
+
+.settings-panel__layout {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  height: calc(100% - 64px);
+  min-height: 0;
+}
+
+.settings-nav {
+  background: color-mix(in srgb, var(--color-bg-subtle) 74%, var(--color-surface));
+  border-right: 1px solid var(--color-border-subtle);
+  padding: 16px 10px;
+  overflow-y: auto;
+}
+
+.settings-nav__eyebrow {
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  padding: 2px 10px 14px;
+}
+
+.settings-nav__item {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: grid;
+  gap: 9px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  margin: 2px 0;
+  padding: 9px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.settings-nav__item:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.settings-nav__item.is-active {
+  background: var(--color-accent-subtle);
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  color: var(--color-accent);
+}
+
+.settings-nav__icon {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.settings-nav__icon svg {
+  height: 16px;
+  width: 16px;
+}
+
+.settings-nav__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-nav__copy strong {
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.settings-nav__copy small {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.settings-panel__body {
+  gap: 22px;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 22px 24px 30px;
+}
+
+.settings-panel__body .settings-section__title {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.settings-panel__body .settings-field,
+.settings-panel__body .settings-btn,
+.settings-panel__body .settings-feedback,
+.settings-panel__body .settings-notice,
+.settings-panel__body .settings-toggle {
+  font-size: 12.5px;
+}
+
+.settings-panel__body .settings-field input,
+.settings-panel__body .settings-field select {
+  height: 34px;
+  border-radius: 7px;
+  font-size: 12.5px;
+}
+
+.settings-panel__body .settings-btn {
+  min-height: 32px;
+  border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+  .settings-panel {
+    width: min(100vw - 12px, 560px);
+  }
+
+  .settings-panel__layout {
+    grid-template-columns: 1fr;
+    height: calc(100% - 64px);
+  }
+
+  .settings-nav {
+    border-bottom: 1px solid var(--color-border-subtle);
+    border-right: 0;
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+  }
+
+  .settings-nav__eyebrow {
+    display: none;
+  }
+
+  .settings-nav__item {
+    flex: 0 0 auto;
+    grid-template-columns: 26px auto;
+    padding: 7px 8px;
+    width: auto;
+  }
+
+  .settings-nav__copy small {
+    display: none;
+  }
+
+  .settings-nav__icon,
+  .settings-nav__icon svg {
+    height: 24px;
+    width: 24px;
+  }
+}
+
+.run-history__remote {
+  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.run-history__remote-heading,
+.run-history__remote-summary,
+.run-history__artifact-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.run-history__remote-heading {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.run-history__remote-heading small,
+.run-history__remote-meta,
+.run-history__remote-summary small,
+.run-history__artifact-note {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.run-history__remote-item {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 9px;
+  margin: 5px 0;
+  overflow: hidden;
+}
+
+.run-history__remote-item.is-expanded {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+}
+
+.run-history__remote-summary {
+  background: var(--color-surface-raised);
+  border: 0;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 9px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.run-history__remote-summary:hover {
+  background: var(--color-accent-subtle);
+}
+
+.run-history__remote-summary strong,
+.run-history__remote-summary small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.run-history__remote-summary strong {
+  font-size: 11.5px;
+}
+
+.run-history__remote-details {
+  background: var(--color-bg-subtle);
+  border-top: 1px solid var(--color-border-subtle);
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px 11px 27px;
+}
+
+.run-history__remote-meta {
+  display: flex;
+  gap: 10px;
+}
+
+.run-history__remote-event {
+  align-items: flex-start;
+  color: var(--color-text-secondary);
+  display: flex;
+  font-size: 11px;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.run-history__remote-event-dot {
+  background: var(--color-success);
+  border-radius: 50%;
+  flex: 0 0 6px;
+  height: 6px;
+  margin-top: 5px;
+  width: 6px;
+}
+
+.run-history__artifacts {
+  border-top: 1px solid var(--color-border-subtle);
+  display: grid;
+  gap: 6px;
+  margin-top: 3px;
+  padding-top: 8px;
+}
+
+.run-history__artifacts > strong {
+  color: var(--color-text);
+  font-size: 11px;
+}
+
+.run-history__artifact {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 7px;
+  padding: 7px;
+}
+
+.run-history__artifact-head {
+  justify-content: space-between;
+}
+
+.run-history__artifact-head > span {
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.run-history__artifact-head .agent-btn {
+  flex: 0 0 auto;
+  font-size: 10px;
+  min-height: 26px;
+  padding: 3px 8px;
+}
+
+.run-history__artifact-preview {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 5px;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9.5px;
+  line-height: 1.45;
+  margin: 7px 0 0;
+  max-height: 180px;
+  overflow: auto;
+  padding: 7px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.run-history__artifact-note,
+.run-history__artifact-error {
+  display: block;
+  margin: 5px 0 0;
+}
+
+.run-history__artifact-error {
+  color: var(--color-danger);
+  font-size: 10.5px;
+}
+
+/* Keep the editor reachable in short embedded windows. The desktop shell can
+   be rendered inside a compact Tauri pane or a split-screen browser; without
+   this pass the four chrome rows consume almost the entire vertical budget. */
+@media (max-height: 520px) and (min-width: 761px) {
+  .document-tabs {
+    flex-basis: 28px;
+    min-height: 28px;
+  }
+
+  .document-tab__select,
+  .document-tabs__new {
+    min-height: 28px;
+  }
+
+  .document-tab__select {
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .document-tab__meta {
+    display: none;
+  }
+
+  .top-bar,
+  .top-bar__toolbar,
+  .top-bar__toolbar.MuiToolbar-root {
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .top-bar__icon-button,
+  .top-bar__settings {
+    flex-basis: 30px;
+    height: 30px;
+    min-height: 30px;
+    width: 30px;
+  }
+
+  .top-bar__agent-toggle {
+    height: 30px;
+    min-height: 30px;
+  }
+
+  .doc-toolbar {
+    gap: 6px;
+    min-height: 36px;
+    padding: 2px 8px;
+  }
+
+  .doc-toolbar__btn {
+    min-height: 28px;
+    padding: 0 7px;
+  }
+
+  .doc-toolbar__divider {
+    height: 18px;
+    margin: 3px 2px;
+  }
+
+  .ove-view-toolbar {
+    flex-basis: 30px;
+    gap: 4px;
+    min-height: 30px;
+    padding: 0 8px;
+  }
+
+  .ove-view-button {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 8px;
+  }
+
+  .ove-enzyme-filter,
+  .ove-translation-filter {
+    padding-left: 8px;
+  }
+
+  .ove-enzyme-filter select,
+  .ove-translation-filter select {
+    height: 24px;
+  }
+}
+
+@media (max-height: 380px) and (min-width: 761px) {
+  .document-tabs,
+  .doc-toolbar__metadata {
+    display: none;
+  }
+
+  .doc-toolbar__spacer {
+    flex: 1 1 auto;
   }
 }

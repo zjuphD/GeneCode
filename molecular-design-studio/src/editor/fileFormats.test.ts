@@ -17,6 +17,13 @@ import snapGeneFixtureUrl from "../../tests/fixtures/snapgene-fwd-feature-circul
 // The narrow node:fs / node:path declarations live in src/types/ambient.d.ts.
 const ab1FixturePath = resolve(process.cwd(), "src/fixtures/synthetic_trace.ab1");
 
+it("exports accession and version at GenBank column 13 for fixed-column readers", async () => {
+  const document = await parseGenBank(puc19Raw);
+  const lines = exportToGenbank(document).split(/\r?\n/);
+  expect(lines.find((line) => line.startsWith("ACCESSION"))?.slice(12)).toBe(document.accession);
+  expect(lines.find((line) => line.startsWith("VERSION"))?.slice(12)).toBe(document.version);
+});
+
 function decodeInlineFixture(dataUrl: string): Uint8Array {
   const encoded = dataUrl.split(",")[1];
   if (!encoded) throw new Error("SnapGene fixture was not inlined");

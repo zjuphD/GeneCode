@@ -52,6 +52,8 @@ describe("IsoschizomerCutsitesBody", () => {
     expect(text).toContain("VpaKutJI");
     expect(text).toContain("VpaK11BI");
     expect(text).toContain("VchO66I");
+    expect(text).toContain("sequences may differ");
+    expect(text).not.toContain("all recognize the same sequence");
     // enzymes not at this position stay out
     expect(text).not.toContain("EcoRI");
     await cleanup();

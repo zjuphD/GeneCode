@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Activity from "@mui/icons-material/AnalyticsRounded";
-import ChevronDown from "@mui/icons-material/ExpandMoreRounded";
-import Dna from "@mui/icons-material/BiotechRounded";
-import FilePlus2 from "@mui/icons-material/NoteAddRounded";
-import GitCompareArrows from "@mui/icons-material/CompareArrowsRounded";
-import RefreshCcw from "@mui/icons-material/AutorenewRounded";
-import ScanSearch from "@mui/icons-material/FindInPageRounded";
-import Scissors from "@mui/icons-material/ContentCutRounded";
-import Sparkles from "@mui/icons-material/AutoAwesomeRounded";
-import Wrench from "@mui/icons-material/BuildRounded";
+import { Activity, ChevronDown, Dna, FilePlus2, GitCompareArrows, RefreshCcw, ScanSearch, Scissors, Sparkles, Wrench } from "lucide-react";
 import type { SequenceDocument, SequenceSelection } from "../types";
 import {
   analyzeSequence,

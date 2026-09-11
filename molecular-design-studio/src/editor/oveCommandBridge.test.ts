@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fingerprintDocument } from "../agent/fingerprint";
+import { toOveData } from "./adapter";
 import type { SequencePatch } from "../agent/patchTypes";
 import type { SequenceDocument } from "../types";
 import {
@@ -84,6 +85,20 @@ function makeInsertPatch(document: SequenceDocument): SequencePatch {
 }
 
 describe("OveCommandBridge", () => {
+  it("preserves canonical metadata and ignores display colors when validating a patch", () => {
+    const document = { ...makeDocument(), accession: "TEST001", version: "1" };
+    const { editor, state } = makeEditor(document);
+    state.sequenceData = toOveData(document);
+    const bridge = createOveCommandBridge({
+      editor,
+      getCanonicalDocument: () => document,
+      applyCanonicalDocument: vi.fn(),
+    });
+    expect(bridge.readCurrentState().sequenceHash).toBe(fingerprintDocument(document));
+    expect(bridge.previewPatch(makeInsertPatch(document)).errors).toEqual([]);
+    state.sequenceData = toOveData({ ...document, sequence: "T" + document.sequence.slice(1) });
+    expect(bridge.previewPatch(makeInsertPatch(document)).errors.length).toBeGreaterThan(0);
+  });
   it("reads canonical document, selection, caret and revision from OVE state", () => {
     const { editor } = makeEditor();
     const bridge = createOveCommandBridge({

@@ -13,7 +13,7 @@ use tauri::Manager;
 
 use crate::agent_settings;
 
-const DEFAULT_BASE_URL: &str = "http://127.0.0.1:8000";
+const DEFAULT_BASE_URL: &str = "http://127.0.0.1:18764";
 const HEALTH_TIMEOUT: Duration = Duration::from_millis(700);
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(20);
 const STARTUP_POLL: Duration = Duration::from_millis(250);
@@ -363,8 +363,8 @@ fn health_check(target: &LocalAgentTarget) -> Result<(), &'static str> {
         .map_err(|_| "timeout failed")?;
 
     let request = format!(
-        "GET /api/health HTTP/1.1\r\nHost: {}\r\nAccept: application/json\r\nConnection: close\r\n\r\n",
-        target.base_url()
+        "GET /api/health HTTP/1.1\r\nHost: {}:{}\r\nAccept: application/json\r\nConnection: close\r\n\r\n",
+        target.host, target.port
     );
     stream
         .write_all(request.as_bytes())
@@ -424,6 +424,27 @@ fn is_server_script(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn health_request_uses_authority_not_url_in_host_header() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+            let mut request = Vec::new();
+            let mut byte = [0u8; 1];
+            while !request.ends_with(b"\r\n\r\n") {
+                stream.read_exact(&mut byte).unwrap();
+                request.push(byte[0]);
+            }
+            let request = String::from_utf8(request).unwrap();
+            assert!(request.contains(&format!("\r\nHost: 127.0.0.1:{port}\r\n")));
+            stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 11\r\nConnection: close\r\n\r\n{\"ok\":true}").unwrap();
+        });
+        assert!(health_check(&LocalAgentTarget { host: "127.0.0.1".into(), port }).is_ok());
+        server.join().unwrap();
+    }
 
     #[test]
     fn parses_default_localhost_target() {

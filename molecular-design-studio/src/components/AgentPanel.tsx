@@ -7,30 +7,11 @@
  */
 
 import { useId, useState, useEffect, useRef, useCallback, useMemo } from "react";
-import AlertTriangle from "@mui/icons-material/WarningAmberRounded";
-import ArrowDown from "@mui/icons-material/KeyboardArrowDownRounded";
-import ChevronLeft from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRight from "@mui/icons-material/ChevronRightRounded";
-import Download from "@mui/icons-material/DownloadRounded";
-import FileJson from "@mui/icons-material/DataObjectRounded";
-import FileSpreadsheet from "@mui/icons-material/TableViewRounded";
-import FileText from "@mui/icons-material/DescriptionRounded";
-import FlaskConical from "@mui/icons-material/ScienceRounded";
-import HistoryRounded from "@mui/icons-material/HistoryRounded";
-import Maximize2 from "@mui/icons-material/OpenInFullRounded";
-import Minimize2 from "@mui/icons-material/CloseFullscreenRounded";
-import Paperclip from "@mui/icons-material/AttachFileRounded";
-import PenLine from "@mui/icons-material/EditNoteRounded";
-import Plus from "@mui/icons-material/AddRounded";
-import RefreshCw from "@mui/icons-material/RefreshRounded";
-import Ruler from "@mui/icons-material/StraightenRounded";
-import Scissors from "@mui/icons-material/ContentCutRounded";
-import Send from "@mui/icons-material/SendRounded";
-import Sparkles from "@mui/icons-material/AutoAwesomeRounded";
-import Square from "@mui/icons-material/StopRounded";
-import TestTube2 from "@mui/icons-material/BiotechRounded";
-import WifiOff from "@mui/icons-material/WifiOffRounded";
-import X from "@mui/icons-material/CloseRounded";
+import {
+  AlertTriangle, ArrowDown, ArrowUp, Check, ChevronDown, ChevronLeft,
+  ChevronRight, Columns2, Download, FileText, History, Maximize2, Plus,
+  RefreshCw, Square, SquarePen, WifiOff, X,
+} from "lucide-react";
 import type { SequenceDocument, SequenceFeatureInput, SequenceSelection } from "../types";
 import { parseSequenceFile } from "../editor/fileFormats";
 import { chooseSequenceFile, readSequenceFile } from "../services/sequenceFiles";
@@ -38,7 +19,7 @@ import type { PatchPreview } from "../agent/patchTypes";
 import PatchPreviewPanel from "./PatchPreview";
 import { useAgentSession } from "../agent/useAgentSession";
 import type { ServiceStatus } from "../agent/useAgentSession";
-import type { AgentMode, AgentSequenceAttachment } from "../agent/service";
+import { listAgentRuns, type AgentMode, type AgentSequenceAttachment } from "../agent/service";
 // Types from responseTypes are used indirectly via agentPanelHelpers.ts
 import { fingerprintDocument } from "../agent/fingerprint";
 import { CandidateCards } from "./CandidateCards";
@@ -71,8 +52,6 @@ import {
   workspaceDisplayLabel,
   mapPlanRowStatus,
   mapRunLogStatus,
-  deriveContextStatus,
-  deriveObjectiveStatus,
   derivePlanningStatus,
   deriveToolStatus,
   deriveResultStatus,
@@ -123,31 +102,14 @@ function headerStatusTone(
   return "neutral";
 }
 
-/** Workspace → icon for starter cards and artifact chips. */
-function workspaceIcon(workspace: string) {
-  switch (workspace) {
-    case "cloning":
-      return <TestTube2 aria-hidden="true" />;
-    case "rtqpcr":
-      return <Ruler aria-hidden="true" />;
-    case "sgrna":
-      return <Scissors aria-hidden="true" />;
-    case "sirna":
-      return <FlaskConical aria-hidden="true" />;
-    case "mutagenesis":
-      return <PenLine aria-hidden="true" />;
-    default:
-      return <Sparkles aria-hidden="true" />;
-  }
-}
-
-/** Artifact type → icon for the result cards. */
-function artifactIcon(type: string) {
-  if (type === "protocol_draft") return <FileText aria-hidden="true" />;
-  if (type === "candidate_table" || type === "ordering_table") {
-    return <FileSpreadsheet aria-hidden="true" />;
-  }
-  return <FileJson aria-hidden="true" />;
+function presentGoal(goal: string): string {
+  const normalized = goal.trim().toLowerCase();
+  if (normalized.startsWith("i want to clone an insert")) return "将插入片段克隆到当前载体";
+  if (normalized.startsWith("design rt-qpcr primers")) return "设计 RT-qPCR 引物";
+  if (normalized.startsWith("design knockout sgrnas") || normalized.startsWith("design ko sgrna")) return "设计 KO sgRNA";
+  if (normalized.startsWith("design sirna")) return "设计 siRNA 双链体";
+  if (normalized.startsWith("design dna point mutation") || normalized.startsWith("design amino-acid mutation")) return "设计点突变引物";
+  return goal;
 }
 
 /**
@@ -397,6 +359,9 @@ function InputComposer({
   attachmentError,
   onAttach,
   onRemoveAttachment,
+  context,
+  controls,
+  mode,
 }: {
   busy: boolean;
   available: boolean;
@@ -410,6 +375,9 @@ function InputComposer({
   attachmentError: string | null;
   onAttach: () => void;
   onRemoveAttachment: () => void;
+  context: React.ReactNode;
+  controls: React.ReactNode;
+  mode: AgentMode;
 }) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -418,7 +386,7 @@ function InputComposer({
     if (resetSignal === 0) return;
     setValue("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = "96px";
+      textareaRef.current.style.height = "64px";
       textareaRef.current.focus();
     }
   }, [resetSignal]);
@@ -429,13 +397,13 @@ function InputComposer({
     onSend(trimmed);
     setValue("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = "96px";
+      textareaRef.current.style.height = "64px";
     }
   }, [value, attachment, busy, available, onSend]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey && !busy && available && (value.trim() || attachment)) {
+      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !busy && available && (value.trim() || attachment)) {
         e.preventDefault();
         handleSend();
       }
@@ -446,7 +414,7 @@ function InputComposer({
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.target.value);
     const el = e.target;
-    el.style.height = "96px";
+    el.style.height = "64px";
     el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
   }, []);
 
@@ -479,6 +447,7 @@ function InputComposer({
         </div>
       )}
       <div className="agent-composer__field">
+        {context}
         <textarea
           ref={textareaRef}
           className="agent-composer__input"
@@ -487,8 +456,9 @@ function InputComposer({
           value={value}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          rows={3}
+          rows={2}
         />
+        <div className="agent-composer__actions">
         <button
           type="button"
           className="agent-btn agent-btn--icon agent-composer__attach"
@@ -497,8 +467,9 @@ function InputComposer({
           aria-label="Attach sequence file"
           title="Attach GenBank, FASTA, or SnapGene sequence"
         >
-          <Paperclip aria-hidden="true" />
+          <Plus aria-hidden="true" />
         </button>
+        {controls}
         <button
           type="button"
           className={`agent-btn agent-composer__send${busy ? " agent-composer__send--stop" : " agent-btn--primary"}`}
@@ -506,11 +477,14 @@ function InputComposer({
           disabled={!busy && ((!value.trim() && !attachment) || !available)}
           aria-label={busy ? "停止 Agent" : "发送消息"}
         >
-          {busy ? <Square aria-hidden="true" /> : <Send aria-hidden="true" />}
-          {busy ? "停止" : "发送"}
+          {busy ? <Square aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}
         </button>
+        </div>
       </div>
-      <span className="agent-composer__hint">Enter 发送 · Shift+Enter 换行</span>
+      <span className="agent-composer__hint">
+        {mode === "auto" ? "自动执行 · 序列修改另存为副本" : mode === "review" ? "仅审阅 · 不修改序列" : "先确认计划，再执行设计"}
+        <span>Shift + Enter 换行</span>
+      </span>
     </div>
   );
 }
@@ -538,6 +512,8 @@ function AgentModeSelector({
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
       setOpen(false);
       triggerRef.current?.focus();
     };
@@ -567,7 +543,7 @@ function AgentModeSelector({
         disabled={disabled}
       >
         <span className="agent-mode-trigger__label">{selected.label}</span>
-        <ArrowDown className="agent-mode-trigger__chevron" aria-hidden="true" />
+        <ChevronDown className="agent-mode-trigger__chevron" aria-hidden="true" />
       </button>
 
       {open && !disabled && (
@@ -587,7 +563,7 @@ function AgentModeSelector({
                 }}
               >
                 <span className="agent-mode-option__check" aria-hidden="true">
-                  {active ? "✓" : ""}
+                  {active && <Check size={14} />}
                 </span>
                 <span className="agent-mode-option__copy">
                   <span className="agent-mode-option__label">{option.label}</span>
@@ -711,7 +687,10 @@ function AgentPanel({
     typeof window !== "undefined" && window.innerWidth < 900,
   );
   const collapsed = open === undefined ? uncontrolledCollapsed : !open;
-  const [wide, setWide] = useState(false);
+  const [wide, setWide] = useState(() => window.localStorage.getItem("genecode-agent-focus") === "true");
+  useEffect(() => {
+    window.localStorage.setItem("genecode-agent-focus", String(wide));
+  }, [wide]);
   const [panelWidth, setPanelWidth] = useState<number | null>(() => {
     if (typeof window === "undefined") return null;
     const stored = Number(window.localStorage.getItem(AGENT_PANEL_WIDTH_STORAGE_KEY));
@@ -725,6 +704,7 @@ function AgentPanel({
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [historyCount, setHistoryCount] = useState(() => loadRunHistory().length);
+  const [backendHistoryCount, setBackendHistoryCount] = useState(0);
   const [conversationHistoryCount, setConversationHistoryCount] = useState(
     () => loadConversationHistory().length,
   );
@@ -734,11 +714,27 @@ function AgentPanel({
   const prevPatchIdRef = useRef<string | null>(null);
   const bodyId = useId();
   const taskStreamRef = useRef<HTMLDivElement>(null);
-  const recentRunsRef = useRef<HTMLDetailsElement>(null);
   const [followLatest, setFollowLatest] = useState(true);
   const prevDocHashRef = useRef<string | null>(null);
 
   const session = useAgentSession(sessionKey);
+
+  // The browser-side notebook is fast and local; the Sidecar Journal is the
+  // authority after a restart. The bounded list keeps this check cheap while
+  // also allowing the disclosure count to reflect durable runs.
+  useEffect(() => {
+    if (import.meta.env.MODE === "test" || session.serviceStatus !== "online") {
+      setBackendHistoryCount(0);
+      return undefined;
+    }
+    const controller = new AbortController();
+    void listAgentRuns(50, controller.signal)
+      .then((runs) => setBackendHistoryCount(runs.length))
+      .catch(() => {
+        if (!controller.signal.aborted) setBackendHistoryCount(0);
+      });
+    return () => controller.abort();
+  }, [session.serviceStatus]);
   const readActionContext = useCallback((): AgentActionContext => {
     const live = getLiveEditorContext?.();
     return {
@@ -1010,6 +1006,13 @@ function AgentPanel({
   const handleStepNodeClick = useCallback((node: StepNode) => {
     const target = nodeTargets.get(node.id);
     if (!target || target.regions.length === 0) return;
+    // Explicitly locating a tool result reveals the sequence canvas; live
+    // background updates must not switch the user's chosen conversation view.
+    setWide(false);
+    if (window.innerWidth < 1000) {
+      if (open === undefined) setUncontrolledCollapsed(true);
+      onOpenChange?.(false);
+    }
     const start = Math.min(...target.regions.map((region) => region.start));
     const end = Math.max(...target.regions.map((region) => region.end));
     onLocateRegion?.({ start, end, label: target.regions[0]?.label });
@@ -1019,7 +1022,7 @@ function AgentPanel({
         token: (current?.token ?? 0) + 1,
       }));
     }
-  }, [nodeTargets, onLocateRegion]);
+  }, [nodeTargets, onLocateRegion, open, onOpenChange]);
 
   // Current-step live tracking: when a tool/validation node becomes active
   // and it has a locatable target, auto-locate the region in the editor and
@@ -1083,8 +1086,8 @@ function AgentPanel({
 
     const handleMove = (ev: MouseEvent) => {
       if (!isResizingRef.current) return;
-      const delta = startX - ev.clientX; // dragging left = wider
-      const newWidth = Math.max(280, Math.min(800, startWidth + delta));
+      const delta = startX - ev.clientX; // Drag the right-docked panel's left edge.
+      const newWidth = Math.max(360, Math.min(800, startWidth + delta));
       latestWidth = newWidth;
       setPanelWidth(newWidth);
     };
@@ -1339,8 +1342,6 @@ function AgentPanel({
     session.resultCount !== null;
 
   // Derive task-node statuses from structured state only
-  const contextStatus = deriveContextStatus(doc);
-  const objectiveStatus = deriveObjectiveStatus(session.phase, session.lastUserGoal);
   const planningStatus = derivePlanningStatus(session.phase, session.plan);
   const toolStatus = deriveToolStatus(session.phase, session.runLog);
   const resultStatus = deriveResultStatus(
@@ -1396,11 +1397,10 @@ function AgentPanel({
   const hasCompletedResult =
     session.recommendation !== null ||
     session.candidates.length > 0 ||
-    session.resultCount !== null ||
+    (session.resultCount !== null && session.resultCount > 0) ||
     Boolean(
       session.agentRun.runId &&
-      session.agentRun.status &&
-      !["awaiting_input", "planning", "planned"].includes(session.agentRun.status),
+      ["completed", "success"].includes(session.agentRun.status ?? ""),
     );
   const confirmation = session.taskConfirmation;
   const hasBlockingInputs = Boolean(
@@ -1470,6 +1470,7 @@ function AgentPanel({
     collapsed && "agent-panel--collapsed",
     hideCollapsedRail && "agent-panel--rail-hidden",
     wide && "agent-panel--wide",
+    !hasGoal && !hasActivity && "agent-panel--welcome",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1488,14 +1489,29 @@ function AgentPanel({
           className="agent-panel__resize-handle"
           onMouseDown={handleResizeStart}
           title="Drag to resize"
+          role="separator"
+          tabIndex={0}
+          aria-label="调整 Agent 面板宽度"
+          aria-orientation="vertical"
+          aria-valuemin={360}
+          aria-valuemax={800}
+          aria-valuenow={Math.max(360, panelWidth ?? 420)}
+          onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            event.preventDefault();
+            setWide(false);
+            const measured = event.currentTarget.parentElement?.getBoundingClientRect().width;
+            const current = measured || panelWidth || 420;
+            const next = event.key === "Home" ? 360 : event.key === "End" ? 800
+              : Math.max(360, Math.min(800, current + (event.key === "ArrowLeft" ? 40 : -40)));
+            setPanelWidth(next);
+            window.localStorage.setItem(AGENT_PANEL_WIDTH_STORAGE_KEY, String(next));
+          }}
         />
       )}
       <div className="agent-header">
         {!collapsed && (
           <div className="agent-header__left">
-            <span className="agent-header__brand" aria-hidden="true">
-              <img src="/assets/brand/genecode-agent-avatar-v3.png" alt="" />
-            </span>
             <div className="agent-header__identity">
               <span className="agent-header__title">GeneCode Agent</span>
               <span className={`agent-header__status agent-header__status--${headerStatusTone(headerTaskState, session.serviceStatus)}`}>
@@ -1522,7 +1538,7 @@ function AgentPanel({
               aria-label="新任务"
               disabled={isBusy}
             >
-              <Plus aria-hidden="true" />
+              <SquarePen aria-hidden="true" />
             </button>
           )}
           {!collapsed && (
@@ -1534,7 +1550,7 @@ function AgentPanel({
               aria-label="历史对话"
               aria-pressed={conversationHistoryOpen}
             >
-              <HistoryRounded aria-hidden="true" />
+              <History aria-hidden="true" />
               {conversationHistoryCount > 0 && (
                 <span className="agent-history-trigger__count" aria-label={`${conversationHistoryCount} 个历史对话`}>
                   {conversationHistoryCount > 99 ? "99+" : conversationHistoryCount}
@@ -1545,12 +1561,13 @@ function AgentPanel({
           {!collapsed && (
             <button
               type="button"
-              className="agent-btn agent-btn--icon"
+              className="agent-btn agent-focus-toggle"
               onClick={() => setWide(!wide)}
-              title={wide ? "Default view" : "Wide view"}
-              aria-label={wide ? "Default view" : "Wide view"}
+              title={wide ? "与序列工作区并排显示" : "展开为专注对话视图"}
+              aria-label={wide ? "序列并排" : "专注对话"}
             >
-              {wide ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
+              {wide ? <Columns2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
+              <span>{wide ? "序列并排" : "专注对话"}</span>
             </button>
           )}
           <button
@@ -1608,124 +1625,87 @@ function AgentPanel({
                   setFollowLatest(nearBottom);
                 }}
               >
-                <div className="agent-pinned-summary">
-                  <TaskNodeRow
-                    status={contextStatus}
-                    label={doc && doc.sequence.length > 0 ? "序列信息" : doc ? "无序列" : "无文档"}
-                    className="agent-context-node"
-                  >
-                    {doc && doc.sequence.length > 0 ? (
-                      <>
-                        <span className="task-node__detail">
-                          {doc.name} · {doc.sequence.length.toLocaleString()} bp ·{" "}
-                          {doc.circular ? "Circular" : "Linear"}
-                        </span>
-                        {selection && (
-                          <span className="task-node__detail">
-                            {selection.wrapsOrigin
-                              ? `Selection ${selection.start + 1}–${doc.sequence.length} / 1–${selection.end} · ${selection.length.toLocaleString()} bp · wraps origin`
-                              : `Selection ${selection.start + 1}–${selection.end} · ${selection.length.toLocaleString()} bp`}
-                          </span>
-                        )}
-                        {hasContextChangeNotice && (hasGoal || hasMeaningfulConversation) && (
-                          <span className="task-node__detail agent-context-update">
-                            Sequence changed; the previous draft was cleared.
-                          </span>
-                        )}
-                      </>
-                    ) : doc ? (
-                      <span className="task-node__detail">
-                        打开、粘贴或导入序列，或在下方描述目标。
-                      </span>
-                    ) : (
-                      <span className="task-node__detail">打开序列文件以开始</span>
-                    )}
-                  </TaskNodeRow>
-
-                  {(!session.conversationOnly && (hasGoal || !doc || doc.sequence.length === 0)) && (
-                    <TaskNodeRow
-                      status={objectiveStatus}
-                      label={hasGoal ? "目标" : "设定目标"}
-                      className="agent-objective-node"
-                    >
-                      {hasGoal ? (
-                        <>
-                          <span className="task-node__detail">{session.lastUserGoal}</span>
-                          <span className="agent-task-type" aria-label="检测到的任务类型">
-                            <strong>{taskTypePending ? "检测中…" : taskTypeLabel}</strong>
-                            <span>{taskTypePending ? "正在路由任务" : "自动检测"}</span>
-                          </span>
-                        </>
-                      ) : (
-                        <span className="task-node__detail">添加序列或描述基因、登录号或设计目标</span>
-                      )}
-                    </TaskNodeRow>
-                  )}
-                </div>
+                {hasContextChangeNotice && (hasGoal || hasMeaningfulConversation) && (
+                  <p className="agent-context-update" role="status">
+                    Sequence changed; the previous draft was cleared.
+                  </p>
+                )}
 
                 {/* Starter cards when idle with no activity (P2 onboarding) */}
-                {!hasGoal && !hasActivity && doc && doc.sequence.length > 0 && (
+                {!hasGoal && !hasActivity && (
                   <div className="agent-welcome">
                     <div className="agent-welcome__identity" aria-label="GeneCode Agent 自我介绍">
-                      <span className="agent-welcome__identity-mark" aria-hidden="true">
-                        <img src="/assets/brand/genecode-agent-avatar-v3.png" alt="" />
-                      </span>
                       <div className="agent-welcome__identity-copy">
+                        <span className="agent-welcome__eyebrow">序列在手，想法开始。</span>
                         <div className="agent-welcome__greeting" role="heading" aria-level={2}>
-                          你好，chen
+                          从一个想法，到下一步设计。
                         </div>
                         <p className="agent-welcome__description">
-                          我是 GeneCode，您的虚拟分子生物学协作者——专为序列设计、克隆分析和实验迭代而设计。
+                          描述你的目标，或从下方选择一个任务。
                         </p>
                       </div>
                     </div>
-                    <div className="agent-welcome__heading">
-                      <strong>新建分子设计</strong>
-                      <span className="agent-welcome__sub">从示例开始，或在下方向 Agent 描述您的目标</span>
-                    </div>
-                    <div className="agent-welcome__section-label">示例任务</div>
-                    <div className="agent-starter-grid">
-                      {UNIFIED_TASK_STARTERS.map((task) => (
-                        <button
-                          key={task.label}
-                          type="button"
-                          className="agent-starter-card"
-                          onClick={() => handleStarterSend(task)}
-                          disabled={isBusy}
-                        >
-                          <span className="agent-starter-card__icon" aria-hidden="true">
-                            {workspaceIcon(task.workspace)}
-                          </span>
-                          <span className="agent-starter-card__label">{task.label}</span>
-                          <span className="agent-starter-card__hint">{workspaceDisplayLabel(task.workspace)}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {historyCount > 0 && (
-                      <button
-                        type="button"
-                        className="agent-welcome__recent"
-                        onClick={() => {
-                          const node = recentRunsRef.current;
-                          if (node) {
-                            node.open = true;
-                            node.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                          }
-                        }}
-                        disabled={isBusy}
-                      >
-                        <ArrowDown aria-hidden="true" />
-                        Open recent runs ({historyCount})
-                      </button>
-                    )}
                   </div>
+                )}
+
+                {meaningfulMessages.length > 0 && (
+                  <section
+                    className="agent-conversation-history"
+                    aria-label="当前对话"
+                  >
+                    <div className="agent-conversation-history__content">
+                      {hiddenMessageCount > 0 && (
+                        <button
+                          type="button"
+                          className="agent-history-toggle"
+                          onClick={() => setShowOlderMessages((value) => !value)}
+                        >
+                          {showOlderMessages
+                            ? "隐藏较早消息"
+                            : `显示 ${hiddenMessageCount} 条较早消息`}
+                        </button>
+                      )}
+                      {visibleMessages.map((msg, i) => {
+                        const messageKey = messageKeyFor(msg, i);
+                        return (
+                        <div key={messageKey} className={`task-activity task-activity--${msg.role}`}>
+                          <div className="task-activity__bubble">
+                            <span className="task-activity__role">
+                              {msg.role === "user" ? "你" : "GeneCode"}
+                            </span>
+                            <div className="task-activity__text">
+                              <ProgressiveMessageText
+                                content={msg.role === "user" ? presentGoal(msg.content) : msg.content}
+                                animate={messageKey === streamingMessageKey}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {hasGoal && !hasMeaningfulConversation && (
+                  <section className="agent-conversation-history" aria-label="当前目标">
+                    <div className="task-activity task-activity--user">
+                      <div className="task-activity__text">{presentGoal(session.lastUserGoal)}</div>
+                    </div>
+                  </section>
+                )}
+
+                {!session.conversationOnly && hasGoal && (
+                  <span className="agent-task-type" aria-label="检测到的任务类型">
+                    {taskTypePending ? "正在识别任务…" : taskTypeLabel}
+                  </span>
                 )}
 
                 {confirmation && (hasBlockingInputs || hasConfirmationNotes) && (
                   <TaskNodeRow
                     status={hasBlockingInputs ? "waiting" : "review"}
-                    label={hasBlockingInputs ? "Required inputs" : "Review notes"}
-                    className="agent-required-inputs-node"
+                    label={hasBlockingInputs ? "需要输入" : "审查提示"}
+                    className={`agent-required-inputs-node${!hasBlockingInputs && confirmation.warnings.length === 0 ? " agent-required-inputs-node--notes" : ""}`}
                   >
                     <TaskConfirmationPanel
                       confirmation={confirmation}
@@ -1735,13 +1715,14 @@ function AgentPanel({
                 )}
 
                 {!session.conversationOnly && (session.plan.length > 0 || session.phase === "planning") && (
+                  <details className="agent-disclosure agent-plan-disclosure" open={session.readyToExecute && !hasCompletedResult ? true : undefined}>
+                  <summary>{session.plan.length > 0 ? "执行计划" : "正在整理计划"}{session.plan.length > 0 && <span>{session.plan.length} 个步骤</span>}<ChevronDown aria-hidden="true" /></summary>
                   <TaskNodeRow status={planningStatus} label="规划" className="agent-plan-node">
                     {session.plan.length === 0 && (
-                      <span className="task-node__detail">Building a sequence-aware plan…</span>
+                      <span className="task-node__detail">正在根据序列上下文生成计划…</span>
                     )}
                     {session.plan.map((row, i) => {
                       const detailParts: string[] = [];
-                      if (row.tool) detailParts.push(row.tool);
                       if (row.summary) detailParts.push(row.summary);
                       return (
                         <TaskNodeRow
@@ -1753,6 +1734,7 @@ function AgentPanel({
                       );
                     })}
                   </TaskNodeRow>
+                  </details>
                 )}
 
                 {/* Live Step flow — stream the same normalized graph as a
@@ -1774,7 +1756,7 @@ function AgentPanel({
                 )}
 
                 {session.readyToExecute && session.draft && (
-                  <TaskNodeRow status="active" label="Next action" className="agent-next-action-node">
+                  <TaskNodeRow status="active" label="下一步" className="agent-next-action-node">
                     {session.agentMode !== "review" ? (
                       session.agentMode === "auto" ? (
                         session.error ? (
@@ -1785,13 +1767,13 @@ function AgentPanel({
                             onClick={handleExecute}
                             disabled={session.phase !== "idle"}
                           >
-                            Retry run
+                            重试执行
                           </button>
                         ) : (
                           /* Auto mode executes the ready plan immediately — no
                              confirmation click needed (zero-interaction flow). */
                           <span className="task-node__detail agent-auto-run-note">
-                            Auto 模式：计划已就绪，正在自动执行…
+                            自动模式：计划已就绪，正在执行…
                           </span>
                         )
                       ) : (
@@ -1802,71 +1784,24 @@ function AgentPanel({
                           disabled={session.phase !== "idle"}
                         >
                           {session.workspace === "cloning"
-                            ? "Confirm plan and generate preview"
-                            : "Run molecular design"}
+                            ? "确认计划并生成预览"
+                            : "执行分子设计"}
                         </button>
                       )
                     ) : (
                       <span className="task-node__detail">
-                        Review complete. Switch to Guided or Auto mode to run design tools.
+                        已完成审阅。切换到引导或自动模式后，才能执行设计工具。
                       </span>
                     )}
                   </TaskNodeRow>
                 )}
 
-                {meaningfulMessages.length > 0 && (
-                  <details
-                    className="agent-conversation-history"
-                    open={session.conversationOnly || !hasCompletedResult ? true : undefined}
-                  >
-                    <summary>
-                      <span>对话</span>
-                      <span>{meaningfulMessages.length} 条消息</span>
-                    </summary>
-                    <div className="agent-conversation-history__content">
-                      {hiddenMessageCount > 0 && (
-                        <button
-                          type="button"
-                          className="agent-history-toggle"
-                          onClick={() => setShowOlderMessages((value) => !value)}
-                        >
-                          {showOlderMessages
-                            ? "隐藏较早消息"
-                            : `显示 ${hiddenMessageCount} 条较早消息`}
-                        </button>
-                      )}
-                      {visibleMessages.map((msg, i) => {
-                        const messageKey = messageKeyFor(msg, i);
-                        return (
-                        <div key={messageKey} className={`task-activity task-activity--${msg.role}`}>
-                          {msg.role === "assistant" && (
-                            <span className="task-activity__avatar" aria-hidden="true">
-                              <img src="/assets/brand/genecode-agent-avatar-v3.png" alt="" />
-                            </span>
-                          )}
-                          <div className="task-activity__bubble">
-                            <span className="task-activity__role">
-                              {msg.role === "user" ? "You" : "Agent"}
-                            </span>
-                            <div className="task-activity__text">
-                              <ProgressiveMessageText
-                                content={msg.content}
-                                animate={messageKey === streamingMessageKey}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        );
-                      })}
-                    </div>
-                  </details>
-                )}
 
                 {/* Tool execution nodes from run log */}
                 {(session.phase === "executing" || session.runLog.length > 0 || session.timeline.length > 0) && (
-                  <TaskNodeRow status={toolStatus} label="Tool run" className="agent-tool-node">
+                  <TaskNodeRow status={toolStatus} label="工具执行" className="agent-tool-node">
                     {session.runLog.length === 0 && session.timeline.length === 0 && session.phase === "executing" && (
-                      <span className="task-node__detail">Running tools...</span>
+                      <span className="task-node__detail">正在执行工具…</span>
                     )}
                     {(session.runLog.length > 0 || session.timeline.length > 0) && (
                       <details
@@ -1874,7 +1809,7 @@ function AgentPanel({
                         open={session.phase === "executing" ? true : undefined}
                       >
                         <summary>
-                          Tool activity
+                          工具活动
                           <span>{session.runLog.length || session.timeline.length} event(s)</span>
                         </summary>
                         <div className="agent-worklog__content">
@@ -1932,7 +1867,7 @@ function AgentPanel({
 
                 {/* Results node */}
                 {hasCompletedResult && (
-                  <TaskNodeRow status={resultStatus} label="Results" className="agent-results-node">
+                  <TaskNodeRow status={resultStatus} label="结果" className="agent-results-node">
                     {/* A-AGT-002: never claim validity when verification was
                         degraded/skipped or execution failed. */}
                     {session.claimLevel === "unvalidated" && (
@@ -1983,24 +1918,21 @@ function AgentPanel({
                                 style={{ width: `${Math.max(4, Math.min(100, session.recommendation.confidence))}%` }}
                               />
                             </span>
-                            Confidence: {session.recommendation.confidence}%
+                            <span title="规划器给出的推荐置信度，不代表实验成功率">推荐置信度 {session.recommendation.confidence}%</span>
                           </div>
                         )}
                       </div>
                     )}
                     {autoArchivedRun && autoArchivedRun.runId === session.agentRun.runId && (
                       <div className="agent-auto-archive" role="status">
-                        <span className="agent-auto-archive__badge">已自动归档</span>
-                        <span className="agent-auto-archive__detail">
-                          纯设计结果（无序列改动）已导出为 <code>{autoArchivedRun.filename}</code>，
-                          并已存入运行历史。
-                        </span>
+                        <span className="agent-auto-archive__badge"><Check aria-hidden="true" />已归档，未改动序列</span>
                         <button
                           type="button"
                           className="agent-btn agent-btn--secondary agent-auto-archive__reload"
                           onClick={() => triggerCsvDownload(autoArchivedRun.filename, autoArchivedRun.csv)}
+                          title={autoArchivedRun.filename}
                         >
-                          重新导出 CSV
+                          <Download aria-hidden="true" />重新导出 CSV
                         </button>
                       </div>
                     )}
@@ -2015,22 +1947,23 @@ function AgentPanel({
                     )}
                     {session.resultCount !== null && (
                       <div className="agent-result-count">
-                        {session.resultCount} tool-generated candidate(s)
+                        共生成 {session.resultCount} 个候选
                       </div>
                     )}
                     {session.artifactPackage && session.artifactPackage.artifacts.length > 0 && (
-                      <div className="agent-artifacts">
-                        <div className="agent-artifacts__title">产物</div>
+                      <details className="agent-artifacts agent-disclosure">
+                        <summary>结果文件<span>{session.artifactPackage.artifacts.length} 个文件</span><ChevronDown aria-hidden="true" /></summary>
+                        <div className="agent-artifacts__list">
                         {session.artifactPackage.artifacts.map((a) => (
                           <div key={a.artifact_id} className="agent-artifacts__item">
                             <span className="agent-artifacts__icon" aria-hidden="true">
-                              {artifactIcon(a.type)}
+                              <FileText />
                             </span>
                             <div className="agent-artifacts__body">
                               <span className="agent-artifacts__name">{a.title}</span>
                               <span className="agent-artifacts__meta">
                                 <span className={`agent-artifacts__status agent-artifacts__status--${a.status}`} />
-                                {a.type}
+                                {a.filename}
                               </span>
                             </div>
                             <button
@@ -2063,14 +1996,16 @@ function AgentPanel({
                             </button>
                           </div>
                         ))}
+                        </div>
                         {session.artifactPackage.summaryMarkdown && (
                           <CopyActionButton
-                            label="Copy summary"
+                            label="复制结果摘要"
                             getText={() => session.artifactPackage!.summaryMarkdown}
                           />
                         )}
-                      </div>
+                      </details>
                     )}
+                    <div className="agent-result-actions">
                     {(session.workspace === "rtqpcr" || session.workspace === "sgrna" || session.workspace === "sirna") && session.candidates.length > 0 && (
                       <div className="agent-validation">
                         <button
@@ -2080,10 +2015,10 @@ function AgentPanel({
                           disabled={session.validationStatus === "running" || isBusy}
                         >
                           {session.validationStatus === "running"
-                            ? "Running remote validation..."
+                            ? "正在进行远程验证…"
                             : session.workspace === "rtqpcr"
-                              ? "Check BLAST specificity"
-                              : "Check off-targets"}
+                              ? "检查 BLAST 特异性"
+                              : "检查脱靶风险"}
                         </button>
                         {session.validationMessages.map((message, index) => (
                           <div key={`validation-message-${index}`} className="task-node__detail">{message}</div>
@@ -2094,14 +2029,14 @@ function AgentPanel({
                             return (
                               <ValidationDetails
                                 key={`validation-${index}`}
-                                candidateLabel={`Candidate ${index + 1}`}
+                                candidateLabel={`候选 ${index + 1}`}
                                 check={check as Record<string, unknown>}
                               />
                             );
                           }
                           return (
                             <div key={`validation-${index}`} className="agent-validation__result">
-                              Candidate {index + 1}: {validationStatusLine(result)}
+                              候选 {index + 1}：{validationStatusLine(result)}
                             </div>
                           );
                         })}
@@ -2132,7 +2067,7 @@ function AgentPanel({
                                 void navigator.clipboard?.writeText(note).catch(() => {});
                               }}
                             >
-                              Copy note
+                              复制记录
                             </button>
                           </>
                         ) : (
@@ -2147,7 +2082,7 @@ function AgentPanel({
                       session.candidates.length > 0 ||
                       session.agentRun.runId) && (
                       <CopyActionButton
-                        label="Copy run note"
+                        label="复制运行记录"
                         getText={() =>
                           buildRunNoteText({
                             recommendation: session.recommendation,
@@ -2157,19 +2092,21 @@ function AgentPanel({
                         }
                       />
                     )}
+                    </div>
                   </TaskNodeRow>
                 )}
 
                 {/* Completed runs stay out of the task stream until one exists. */}
-                {historyCount > 0 && (
-                  <details ref={recentRunsRef} className="agent-worklog agent-history-node">
+                {conversationHistoryOpen && (historyCount > 0 || backendHistoryCount > 0 || session.serviceStatus === "online") && (
+                  <details className="agent-worklog agent-history-node" open>
                     <summary>
-                      Recent runs
-                      <span>{historyCount}</span>
+                      最近运行
+                      <span>{Math.max(historyCount, backendHistoryCount)}</span>
                     </summary>
                     <div className="agent-worklog__content">
                       <RunHistoryPanel
                         onRestore={(entry) => session.restoreFromHistory(entry)}
+                        onBackendCount={setBackendHistoryCount}
                       />
                     </div>
                   </details>
@@ -2274,15 +2211,20 @@ function AgentPanel({
           )}
 
           <div className="agent-input-dock">
-            <AgentModeSelector
-              mode={session.agentMode as AgentMode}
-              busy={isBusy}
-              available={isOnline}
-              onChange={session.setAgentMode}
-            />
-
             {/* Keep the composer visible while offline so the Agent entry point never disappears. */}
             <InputComposer
+              mode={session.agentMode as AgentMode}
+              controls={<AgentModeSelector mode={session.agentMode as AgentMode} busy={isBusy} available={isOnline} onChange={session.setAgentMode} />}
+              context={doc && doc.sequence.length > 0 ? (
+                <div className="agent-composer__context" aria-label="序列信息">
+                  <button type="button" onClick={() => setPanelCollapsed(true)} title="在序列工作区查看" className="agent-context-file">
+                    <FileText aria-hidden="true" /><span>{doc.name}</span><small>{doc.sequence.length.toLocaleString()} bp · {doc.circular ? "环状" : "线性"}</small>
+                  </button>
+                  {selection && <span className="agent-context-selection">{selection.wrapsOrigin
+                    ? `选区 ${selection.start + 1}–${doc.sequence.length} / 1–${selection.end} · ${selection.length.toLocaleString()} bp · 跨越起点`
+                    : `选区 ${selection.start + 1}–${selection.end} · ${selection.length.toLocaleString()} bp`}</span>}
+                </div>
+              ) : <div className="agent-composer__context"><span className="agent-context-selection">{doc ? "无序列" : "无文档"} · 可直接描述目标或添加序列文件</span></div>}
               busy={isBusy}
               available={isOnline}
               resetSignal={composerResetSignal}
@@ -2305,6 +2247,16 @@ function AgentPanel({
                 setAttachmentError(null);
               }}
             />
+            {!hasGoal && !hasActivity && isOnline && (
+              <div className="agent-starter-grid" aria-label="新建分子设计">
+                {UNIFIED_TASK_STARTERS.map((task) => (
+                  <button key={task.label} type="button" className="agent-starter-card"
+                    aria-label={task.label} onClick={() => handleStarterSend(task)} disabled={isBusy}>
+                    {workspaceDisplayLabel(task.workspace)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

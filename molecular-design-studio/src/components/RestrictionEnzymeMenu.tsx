@@ -44,6 +44,7 @@ export function RestrictionEnzymeMenu({
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<"use" | "visibility" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -55,8 +56,11 @@ export function RestrictionEnzymeMenu({
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
         setOpen(false);
         setSubmenu(null);
+        triggerRef.current?.focus();
       }
     };
     document.addEventListener("pointerdown", handlePointerDown);
@@ -101,6 +105,7 @@ export function RestrictionEnzymeMenu({
     <div className="ove-enzyme-menu" ref={rootRef}>
       <button
         type="button"
+        ref={triggerRef}
         className="ove-enzyme-menu__trigger"
         onClick={() => {
           setOpen((current) => !current);

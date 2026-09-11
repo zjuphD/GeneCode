@@ -208,4 +208,16 @@ describe("Sidebar", () => {
     const restoredSidebar = restored.container.querySelector(".sidebar") as HTMLElement;
     expect(restoredSidebar.style.width).toBe("300px");
   });
+
+  it("gives the inspector room and keeps sequence files available on demand", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "检查器" }));
+    expect(screen.queryByRole("searchbox", { name: "搜索并筛选文件" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "展开序列文件" }));
+    expect(screen.getByRole("searchbox", { name: "搜索并筛选文件" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "收起序列文件" }));
+    expect(screen.queryByRole("searchbox", { name: "搜索并筛选文件" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /特征/ }));
+    expect(screen.getByRole("searchbox", { name: "搜索并筛选文件" })).toBeDefined();
+  });
 });

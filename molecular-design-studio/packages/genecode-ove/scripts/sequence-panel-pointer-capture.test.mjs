@@ -512,7 +512,7 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
     await cleanup();
   });
 
-  it("collapses isoschizomer labels into a single SnapGene-style label per position", async () => {
+  it("labels a group with the total enzyme count", async () => {
     const cutsites = [
       { id: "a", name: "VpaKutJI", start: 10, end: 14, topSnipPosition: 11 },
       { id: "b", name: "VpaK11BI", start: 10, end: 14, topSnipPosition: 11 },
@@ -523,17 +523,16 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
       sequenceData: makeSequenceData({ cutsites })
     });
     const cutLabels = [...container.querySelectorAll(".genecode-sequence-label-cutsites")];
-    // Two isoschizomers share position 11 → one merged label: the first enzyme
-    // name plus a "+N" count of additional isoschizomers, SnapGene style.
+    // The count is explicitly enzymes at this cut, not additional cut sites.
     expect(cutLabels.length).toBeLessThanOrEqual(3);
     const texts = cutLabels.map(node => node.textContent);
-    expect(texts).toContain("VpaKutJI +1");
+    expect(texts).toContain("VpaKutJI · 2酶");
     expect(texts).not.toContain("VpaK11BI");
     await cleanup();
   });
 
-  it("shows a +N count when more than two isoschizomers share a position", async () => {
-    // Five isoschizomers all cut position 11 → "VpaKutJI +4".
+  it("shows the full group size when more than two enzymes share a position", async () => {
+    // Five enzymes share the same pair of cuts.
     const cutsites = [
       { id: "a", name: "VpaKutJI", start: 10, end: 14, topSnipPosition: 11 },
       { id: "b", name: "VpaK11BI", start: 10, end: 14, topSnipPosition: 11 },
@@ -547,7 +546,7 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
     });
     const cutLabels = [...container.querySelectorAll(".genecode-sequence-label-cutsites")];
     const texts = cutLabels.map(node => node.textContent);
-    expect(texts).toContain("VpaKutJI +4");
+    expect(texts).toContain("VpaKutJI · 5酶");
     await cleanup();
   });
 
@@ -561,7 +560,7 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
     const { container, props, cleanup } = await renderPanel({
       sequenceData: makeSequenceData({ cutsites })
     });
-    const mergedLabel = findLabelText(container, "VpaKutJI +2");
+    const mergedLabel = findLabelText(container, "VpaKutJI · 3酶");
     expect(mergedLabel).not.toBeNull();
     dispatchDblClick(mergedLabel);
     expect(props.cutsiteDoubleClicked).toHaveBeenCalledTimes(1);
@@ -580,7 +579,7 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
     const { container, props, cleanup } = await renderPanel({
       sequenceData: makeSequenceData({ cutsites })
     });
-    const mergedLabel = findLabelText(container, "VpaKutJI +2");
+    const mergedLabel = findLabelText(container, "VpaKutJI · 3酶");
     expect(mergedLabel).not.toBeNull();
     dispatchClick(mergedLabel);
     expect(props.cutsiteClicked).toHaveBeenCalledTimes(1);
@@ -609,6 +608,122 @@ describe("SequencePanel cutsite dedup (isoschizomers)", () => {
     dispatchClick(markers[0], { clientX: 60, clientY: 60 });
     expect(props.cutsiteClicked).toHaveBeenCalledTimes(1);
     expect(props.cutsiteClicked.mock.calls[0][0].annotation.id).toBe("a");
+    await cleanup();
+  });
+});
+
+describe("SequencePanel readable annotation canvas", () => {
+  it("uses the host's familiar enzyme names for group labels and selection without mutating the input", async () => {
+    const sequenceData = makeSequenceData({ cutsites: [
+      { id: "rare", name: "Sse8387I", start: 10, end: 17, topSnipPosition: 16, bottomSnipPosition: 12 },
+      { id: "common", name: "PstI", start: 11, end: 16, topSnipPosition: 16, bottomSnipPosition: 12 }
+    ] });
+    const before = JSON.stringify(sequenceData);
+    const { container, props, cleanup } = await renderPanel({
+      sequenceData, enzymeGroupsOverride: { "Common cloning": ["PstI"] }
+    });
+    const label = findLabelText(container, "PstI · 2酶");
+    expect(label).not.toBeNull();
+    dispatchClick(label);
+    expect(props.cutsiteClicked.mock.calls[0][0].annotation.id).toBe("common");
+    dispatchDblClick(label);
+    expect(props.cutsiteDoubleClicked.mock.calls[0][0].annotation.isoschizomerNames).toEqual(["PstI", "Sse8387I"]);
+    const marker = container.querySelector(".genecode-sequence-cutsite-visual");
+    expect(marker.getAttribute("aria-label")).toContain("PstI");
+    expect(JSON.stringify(sequenceData)).toBe(before);
+    await cleanup();
+  });
+
+  it("truncates long feature labels without losing the full name or keyboard selection", async () => {
+    const feature = {
+      id: "long-feature", name: "A very long annotation name that must not escape its feature",
+      start: 3, end: 12, forward: true, type: "CDS", color: "#338877"
+    };
+    const { container, props, cleanup } = await renderPanel({
+      sequenceData: makeSequenceData({ features: [feature] }),
+      selectionLayer: { start: 3, end: 12 }
+    });
+    const region = container.querySelector(".genecode-sequence-feature");
+    expect(region.querySelector(".genecode-sequence-feature-label").textContent).toMatch(/…$/);
+    expect(region.querySelector("title").textContent).toContain(feature.name);
+    expect(region.getAttribute("aria-label")).toContain("4–13");
+    expect(region.getAttribute("aria-pressed")).toBe("true");
+    expect(region.querySelector("clipPath rect")).not.toBeNull();
+    await act(async () => region.dispatchEvent(new window.KeyboardEvent("keydown", {
+      key: "Enter", bubbles: true, cancelable: true
+    })));
+    expect(props.featureClicked).toHaveBeenCalledTimes(1);
+    expect(props.featureClicked.mock.calls[0][0].annotation.id).toBe(feature.id);
+    expect(props.editorClicked).not.toHaveBeenCalled();
+    await cleanup();
+  });
+
+  it("shows a terminal arrow only where a forward feature actually ends", async () => {
+    const { container, cleanup } = await renderPanel({
+      sequenceData: makeSequenceData({
+        sequence: "ATG".repeat(60), cutsites: [],
+        features: [{ id: "spanning", name: "Spanning CDS", start: 3, end: 112, forward: true }]
+      }),
+      dimensions: { width: 800, height: 900 }
+    });
+    const segments = [...container.querySelectorAll('[data-annotation-id="spanning"]')];
+    expect(segments.length).toBeGreaterThan(1);
+    expect(segments[0].getAttribute("data-arrowhead")).toBe("false");
+    expect(segments.at(-1).getAttribute("data-arrowhead")).toBe("true");
+    expect(segments.filter(node => node.getAttribute("data-arrowhead") === "true")).toHaveLength(1);
+    await cleanup();
+  });
+
+  it("expands dense labels and collapses by keyboard without changing editor data or selection", async () => {
+    const sequenceData = makeSequenceData({
+      features: [], cutsites: Array.from({ length: 35 }, (_, index) => ({
+        id: `dense-${index}`, name: `Enzyme${index}`, start: index, end: index + 3,
+        topSnipPosition: index + 1, bottomSnipPosition: index + 2
+      }))
+    });
+    const before = JSON.stringify(sequenceData);
+    const { container, props, cleanup } = await renderPanel({ sequenceData });
+    const collapsedCount = container.querySelectorAll(".genecode-sequence-label-cutsites").length;
+    const control = container.querySelector(".genecode-sequence-overflow-control");
+    expect(control.getAttribute("aria-expanded")).toBe("false");
+    expect(collapsedCount).toBeLessThan(35);
+    await act(async () => dispatchClick(control));
+    expect(container.querySelectorAll(".genecode-sequence-label-cutsites")).toHaveLength(35);
+    expect(control.getAttribute("aria-expanded")).toBe("true");
+    await act(async () => control.dispatchEvent(new window.KeyboardEvent("keydown", {
+      key: " ", bubbles: true, cancelable: true
+    })));
+    expect(container.querySelectorAll(".genecode-sequence-label-cutsites")).toHaveLength(collapsedCount);
+    expect(props.editorClicked).not.toHaveBeenCalled();
+    expect(props.selectionLayerUpdate).not.toHaveBeenCalled();
+    expect(JSON.stringify(sequenceData)).toBe(before);
+    await cleanup();
+  });
+
+  it("does not merge sites with the same top cut but different bottom cuts", async () => {
+    const { container, cleanup } = await renderPanel({
+      sequenceData: makeSequenceData({ cutsites: [
+        { id: "a", name: "EnzymeA", start: 10, end: 15, topSnipPosition: 12, bottomSnipPosition: 14 },
+        { id: "b", name: "EnzymeB", start: 10, end: 15, topSnipPosition: 12, bottomSnipPosition: 16 }
+      ] })
+    });
+    expect(findLabelText(container, "EnzymeA")).not.toBeNull();
+    expect(findLabelText(container, "EnzymeB")).not.toBeNull();
+    expect(container.querySelectorAll(".genecode-sequence-cutsite-visual")).toHaveLength(2);
+    await cleanup();
+  });
+
+  it("shows both strand markers for a focused blunt cut even when their boundary is identical", async () => {
+    const { container, cleanup } = await renderPanel({
+      sequenceData: makeSequenceData({ cutsites: [
+        { id: "blunt", name: "Blunt", start: 10, end: 15, topSnipPosition: 13, bottomSnipPosition: 13 }
+      ] })
+    });
+    const label = findLabelText(container, "Blunt").closest(".genecode-sequence-label-group");
+    expect(container.querySelectorAll(".genecode-sequence-cutsite-marker")).toHaveLength(1);
+    await act(async () => label.dispatchEvent(new window.FocusEvent("focusin", { bubbles: true })));
+    expect(container.querySelectorAll(".genecode-sequence-cutsite-marker")).toHaveLength(2);
+    expect(container.querySelector('[data-cut-strand="bottom"]').getAttribute("data-cut-position")).toBe("13");
     await cleanup();
   });
 });

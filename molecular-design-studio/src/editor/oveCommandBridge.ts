@@ -45,6 +45,8 @@ export type OveCommandHook = () => void | Promise<void>;
 
 export interface OveCommandBridgeOptions {
   editor: OveLikeEditorInstance;
+  /** Preserve canonical metadata and display-only color mappings on read. */
+  getCanonicalDocument?: () => SequenceDocument;
   /**
    * Canonical write boundary. The bridge never commits a proposed document
    * anywhere else.
@@ -291,7 +293,7 @@ export class OveCommandBridge {
   readCurrentState(): OveCommandState {
     const rawState = asState(this.options.editor.getState());
     const sequenceData = readSequenceData(rawState);
-    const result = fromOveData(sequenceData);
+    const result = fromOveData(sequenceData, this.options.getCanonicalDocument?.());
     if (!result.ok) {
       throw new OveCommandBridgeError(
         "invalid_state",
