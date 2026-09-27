@@ -11,6 +11,8 @@
 
 **[体验在线 Demo](https://genecode-agent.pages.dev/)** · [反馈问题](https://github.com/zjuphD/GeneCode/issues)
 
+> GeneCode 也内置在 **[BioSeeki](https://bioseeki.com)**（面向研究者的 AI 科研工作台）中，作为「分子克隆」面板：AI 提出的序列修改，要你确认后才会写入。
+
 <p align="center">
   <a href="https://genecode-agent.pages.dev/">
     <img src="docs/assets/genecode-agent-workflow-preview.gif" alt="GeneCode 工作流演示：提交任务、读取当前序列、查看工具执行步骤" width="100%">

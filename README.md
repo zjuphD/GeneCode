@@ -14,6 +14,10 @@
 **[Open the live demo](https://genecode-agent.pages.dev/)** ·
 [Report an issue](https://github.com/zjuphD/GeneCode/issues)
 
+> GeneCode is also built into **[BioSeeki](https://bioseeki.com/en)**, an AI research
+> workspace for scientists, as its molecular-cloning panel: sequence edits the AI
+> proposes are written only after you approve them.
+
 <p align="center">
   <a href="https://genecode-agent.pages.dev/">
     <img src="docs/assets/genecode-agent-workflow-preview.gif" alt="GeneCode live workflow: open the Agent, ask about the active plasmid, and inspect the sequence-aware answer" width="100%">
